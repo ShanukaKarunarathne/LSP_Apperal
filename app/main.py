@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import cloth
+from app.routers import cloth, design
 
 app = FastAPI(
     title="LSP Apperal API",
@@ -9,6 +9,8 @@ app = FastAPI(
 
 # Include the router for cloth purchases
 app.include_router(cloth.router)
+app.include_router(design.router)
+
 
 @app.get("/", include_in_schema=False)
 def read_root():

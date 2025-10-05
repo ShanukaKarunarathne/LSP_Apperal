@@ -49,7 +49,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"action\": \"CREATE\",\n  \"payload\": {\n    \"cloth_name\": \"Linen Fabric\",\n    \"supplier_name\": \"Global Fabrics Inc.\",\n    \"total_yards\": 15000.5,\n    \"number_of_rolls\": 250,\n    \"number_of_colors\": 8\n  }\n}",
+							"raw": "{\n  \"action\": \"CREATE\",\n  \"payload\": {\n    \"cloth_name\": \"Linen Fabric\",\n    \"supplier_name\": \"Global Fabrics Inc.\",\n    \"total_yards\": 10000,\n    \"number_of_rolls\": 250,\n    \"number_of_colors\": 8\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -178,6 +178,190 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Design Operations",
+			"item": [
+				{
+					"name": "1. Create Design",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseData = pm.response.json();",
+									"    if (responseData && responseData.id) {",
+									"        pm.collectionVariables.set(\"design_id\", responseData.id);",
+									"        console.log(\"Saved design_id: \" + responseData.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"action\": \"CREATE\",\n  \"payload\": {\n    \"design_code\": \"D001\",\n    \"cloth_purchase_id\": \"{{purchase_id}}\",\n    \"allocated_yards_per_piece\": 1.5,\n    \"number_of_pieces\": 10,\n    \"size_distribution\": [\n      {\n        \"size\": \"S\",\n        \"quantity\": 2\n      },\n      {\n        \"size\": \"M\",\n        \"quantity\": 3\n      },\n      {\n        \"size\": \"L\",\n        \"quantity\": 3\n      },\n      {\n        \"size\": \"XL\",\n        \"quantity\": 2\n      }\n    ]\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/designs/operate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"designs",
+								"operate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Read All Designs",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"action\": \"READ_ALL\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/designs/operate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"designs",
+								"operate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Read Single Design",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"action\": \"READ\",\n    \"design_id\": \"{{design_id}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/designs/operate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"designs",
+								"operate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4. Update Design",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"action\": \"UPDATE\",\n  \"design_id\": \"{{design_id}}\",\n  \"payload\": {\n    \"allocated_yards\": 110.0,\n    \"size_distribution\": [\n        {\n            \"size\": \"S\",\n            \"quantity\": 12\n        },\n        {\n            \"size\": \"M\",\n            \"quantity\": 22\n        },\n        {\n            \"size\": \"L\",\n            \"quantity\": 18\n        }\n    ]\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/designs/operate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"designs",
+								"operate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5. Delete Design",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"action\": \"DELETE\",\n    \"design_id\": \"{{design_id}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/designs/operate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"designs",
+								"operate"
+							]
+						}
+					},
+					"response": []
+				},
+                {
+					"name": "6. Get Design Totals",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"action\": \"GET_TOTALS\",\n    \"payload\": {\n        \"design_code\": \"D001\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/designs/operate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"designs",
+								"operate"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"variable": [
@@ -188,6 +372,11 @@
 		},
 		{
 			"key": "purchase_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "design_id",
 			"value": "",
 			"type": "string"
 		}
