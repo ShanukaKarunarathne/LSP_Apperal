@@ -21,3 +21,7 @@ async def dashboard_l2_page(request: Request):
 @router.get("/add-cloth", response_class=HTMLResponse)
 async def add_cloth_page(request: Request):
     return templates.TemplateResponse("L1_addCloth.html", {"request": request})
+
+@router.get("/add-design", response_class=HTMLResponse)
+async def add_design_page(request: Request):
+    return templates.TemplateResponse("L1_addDesign.html", {"request": request})
