@@ -43,10 +43,14 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    // You can store the token in localStorage and redirect
                     localStorage.setItem('accessToken', data.access_token);
-                    // Redirect to a dashboard or home page
-                    window.location.href = "/"; // Or any other page
+                    localStorage.setItem('accessLevel', data.access_level);
+                    
+                    if (data.access_level === 'full_access') {
+                        window.location.href = "/dashboard-l2";
+                    } else {
+                        window.location.href = "/dashboard";
+                    }
                 } else {
                     errorMessage.textContent = 'Incorrect username or password.';
                 }

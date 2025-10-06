@@ -6,7 +6,14 @@ router = APIRouter()
 
 templates = Jinja2Templates(directory="templates")
 
-# Change the path from "/login" to "/"
 @router.get("/", response_class=HTMLResponse)
 async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
+
+@router.get("/dashboard", response_class=HTMLResponse)
+async def dashboard_l1_page(request: Request):
+    return templates.TemplateResponse("L1_index.html", {"request": request})
+
+@router.get("/dashboard-l2", response_class=HTMLResponse)
+async def dashboard_l2_page(request: Request):
+    return templates.TemplateResponse("L2_index.html", {"request": request})

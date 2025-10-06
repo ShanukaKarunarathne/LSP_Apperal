@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSP Apperal - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8faf9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2E8B57;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            font-weight: 600;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 1rem;
+        }
+
+        .dashboard-button {
+            background: #ffffff;
+            border: 2px solid #e8e8e8;
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(46, 139, 87, 0.08);
+        }
+
+        .dashboard-button:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(46, 139, 87, 0.15);
+            border-color: #2E8B57;
+        }
+
+        .dashboard-button h2 {
+            color: #2E8B57;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-button p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 0.75rem 1.5rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    
+    <div class="dashboard-container">
+        <h1>LSP Apperal Dashboard</h1>
+        <div class="button-grid">
+            <div class="dashboard-button" onclick="navigateToAddCloth()">
+                <h2>Add Cloth</h2>
+                <p>Add new cloth purchase records</p>
+            </div>
+            <div class="dashboard-button" onclick="navigateToAddDesign()">
+                <h2>Add New Design</h2>
+                <p>Create new design allocations</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = '/';
+            }
+        });
+
+        function navigateToAddCloth() {
+            window.location.href = '/add-cloth';
+        }
+
+        function navigateToAddDesign() {
+            window.location.href = '/add-design';
+        }
+
+        function logout() {
+            localStorage.removeItem('accessToken');
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
