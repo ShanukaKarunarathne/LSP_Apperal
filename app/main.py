@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import cloth, design
+from app.routers import cloth, design, user
 
 app = FastAPI(
     title="LSP Apperal API",
@@ -7,9 +7,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Include the router for cloth purchases
+# Include the routers
 app.include_router(cloth.router)
 app.include_router(design.router)
+app.include_router(user.router)
 
 
 @app.get("/", include_in_schema=False)

@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List, Any
 from datetime import datetime
 from pydantic import ValidationError
 
 from app.models.cloth import ClothOperationRequest, CrudAction, ClothPurchaseCreate, ClothPurchaseUpdate, ClothPurchaseResponse
 from app.services.firebase_service import db, CLOTH_COLLECTION
+from app.auth import require_access_level
 
 router = APIRouter(
     prefix="/cloth-purchases",
@@ -12,14 +13,14 @@ router = APIRouter(
 )
 
 @router.post("/operate", response_model=Any, status_code=status.HTTP_200_OK)
-def operate_cloth_purchase(request: ClothOperationRequest):
+def operate_cloth_purchase(request: ClothOperationRequest, current_user: dict = Depends(require_access_level(1))):
     """
     A single endpoint to handle all CRUD operations for cloth purchases.
-    - **CREATE**: Provide `action: "CREATE"` and a valid `payload`.
-    - **READ**: Provide `action: "READ"` and the `purchase_id`.
-    - **READ_ALL**: Provide `action: "READ_ALL"`.
-    - **UPDATE**: Provide `action: "UPDATE"`, `purchase_id`, and a `payload` with fields to update.
-    - **DELETE**: Provide `action: "DELETE"` and the `purchase_id`.
+    - **CREATE**: Provide `action: "CREATE"` and a valid `payload`. (Access Level 1 required)
+    - **READ**: Provide `action: "READ"` and the `purchase_id`. (Access Level 1 required)
+    - **READ_ALL**: Provide `action: "READ_ALL"`. (Access Level 1 required)
+    - **UPDATE**: Provide `action: "UPDATE"`, `purchase_id`, and a `payload` with fields to update. (Access Level 2 required)
+    - **DELETE**: Provide `action: "DELETE"` and the `purchase_id`. (Access Level 2 required)
     """
     action = request.action
     purchase_id = request.purchase_id
@@ -49,7 +50,6 @@ def operate_cloth_purchase(request: ClothOperationRequest):
             purchases.append(purchase_data)
         return purchases
 
-    # The following actions require a purchase_id
     if not purchase_id:
         raise HTTPException(status_code=400, detail=f"purchase_id is required for {action} action.")
 
@@ -66,6 +66,8 @@ def operate_cloth_purchase(request: ClothOperationRequest):
 
     # --- UPDATE Operation ---
     if action == CrudAction.UPDATE:
+        if current_user['access_level'] < 2:
+            raise HTTPException(status_code=403, detail="Not enough permissions")
         if not payload:
             raise HTTPException(status_code=400, detail="Payload required for UPDATE action.")
         try:
@@ -83,6 +85,8 @@ def operate_cloth_purchase(request: ClothOperationRequest):
 
     # --- DELETE Operation ---
     if action == CrudAction.DELETE:
+        if current_user['access_level'] < 2:
+            raise HTTPException(status_code=403, detail="Not enough permissions")
         doc_ref.delete()
         return {"status": "success", "message": f"Purchase {purchase_id} deleted."}
 
