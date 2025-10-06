@@ -6,86 +6,6 @@
 	},
 	"item": [
 		{
-			"name": "User Management",
-			"item": [
-				{
-					"name": "1. Register User",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"string\",\n  \"access_level\": 1\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/register",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"register"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "2. Login for Token",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    const responseData = pm.response.json();",
-									"    if (responseData && responseData.access_token) {",
-									"        pm.collectionVariables.set(\"access_token\", responseData.access_token);",
-									"        console.log(\"Saved access_token: \" + responseData.access_token);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "username",
-									"value": "testuser",
-									"type": "text"
-								},
-								{
-									"key": "password",
-									"value": "string",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "{{baseUrl}}/token",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"token"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
 			"name": "Health Check",
 			"request": {
 				"method": "GET",
@@ -101,6 +21,165 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "User Authentication",
+			"item": [
+				{
+					"name": "1. Register User (Level 1)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"user1\",\n  \"password\": \"password123\",\n  \"access_level\": \"read_write\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Register User (Level 2)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\",\n  \"access_level\": \"full_access\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Login User (Level 1)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseData = pm.response.json();",
+									"    if (responseData && responseData.access_token) {",
+									"        pm.collectionVariables.set(\"level_1_token\", responseData.access_token);",
+									"        console.log(\"Saved level_1_token: \" + responseData.access_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "username",
+									"value": "user1",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "password123",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/token",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4. Login User (Level 2)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseData = pm.response.json();",
+									"    if (responseData && responseData.access_token) {",
+									"        pm.collectionVariables.set(\"level_2_token\", responseData.access_token);",
+									"        console.log(\"Saved level_2_token: \" + responseData.access_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "admin123",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/token",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"token"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		},
 		{
 			"name": "Cloth Operations",
@@ -125,6 +204,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{level_1_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -152,6 +241,16 @@
 				{
 					"name": "2. Read All Purchases",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{level_1_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -179,6 +278,16 @@
 				{
 					"name": "3. Read Single Purchase",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{level_1_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -204,8 +313,18 @@
 					"response": []
 				},
 				{
-					"name": "4. Update Purchase",
+					"name": "4. Update Purchase (Level 2)",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{level_2_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -231,8 +350,55 @@
 					"response": []
 				},
 				{
-					"name": "5. Delete Purchase",
+					"name": "5. Delete Purchase (FAIL - Level 1)",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{level_1_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"action\": \"DELETE\",\n    \"purchase_id\": \"{{purchase_id}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/cloth-purchases/operate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"cloth-purchases",
+								"operate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "6. Delete Purchase (SUCCESS - Level 2)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{level_2_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -282,6 +448,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{level_1_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -309,6 +485,16 @@
 				{
 					"name": "2. Read All Designs",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{level_1_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -336,6 +522,16 @@
 				{
 					"name": "3. Read Single Design",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{level_1_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -361,8 +557,18 @@
 					"response": []
 				},
 				{
-					"name": "4. Update Design",
+					"name": "4. Update Design (Level 2)",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{level_2_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -388,8 +594,55 @@
 					"response": []
 				},
 				{
-					"name": "5. Delete Design",
+					"name": "5. Delete Design (FAIL - Level 1)",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{level_1_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"action\": \"DELETE\",\n    \"design_id\": \"{{design_id}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/designs/operate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"designs",
+								"operate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "6. Delete Design (SUCCESS - Level 2)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{level_2_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -415,8 +668,18 @@
 					"response": []
 				},
                 {
-					"name": "6. Get Design Totals",
+					"name": "7. Get Design Totals",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{level_1_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -444,16 +707,6 @@
 			]
 		}
 	],
-	"auth": {
-		"type": "bearer",
-		"bearer": [
-			{
-				"key": "token",
-				"value": "{{access_token}}",
-				"type": "string"
-			}
-		]
-	},
 	"variable": [
 		{
 			"key": "baseUrl",
@@ -471,7 +724,12 @@
 			"type": "string"
 		},
 		{
-			"key": "access_token",
+			"key": "level_1_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "level_2_token",
 			"value": "",
 			"type": "string"
 		}

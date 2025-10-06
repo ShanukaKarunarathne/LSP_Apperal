@@ -5,7 +5,8 @@ from pydantic import ValidationError
 
 from app.models.design import DesignCreatePayload, DesignUpdate, DesignResponse, DesignOperationRequest, Design
 from app.services.firebase_service import db, CLOTH_COLLECTION
-from app.auth import require_access_level
+from app.auth import get_current_user_with_access
+from app.models.user import AccessLevel
 
 router = APIRouter(
     prefix="/designs",
@@ -15,15 +16,15 @@ router = APIRouter(
 DESIGN_COLLECTION = "designs"
 
 @router.post("/operate", response_model=Any, status_code=status.HTTP_200_OK)
-def operate_design(request: DesignOperationRequest, current_user: dict = Depends(require_access_level(1))):
+def operate_design(request: DesignOperationRequest, current_user: dict = Depends(get_current_user_with_access(AccessLevel.LEVEL_1))):
     """
     A single endpoint to handle all CRUD operations for designs.
-    - **CREATE**: Provide `action: "CREATE"` and a valid `payload`. (Access Level 1 required)
-    - **READ**: Provide `action: "READ"` and the `design_id`. (Access Level 1 required)
-    - **READ_ALL**: Provide `action: "READ_ALL"`. (Access Level 1 required)
-    - **UPDATE**: Provide `action: "UPDATE"`, `design_id`, and a `payload` with fields to update. (Access Level 2 required)
-    - **DELETE**: Provide `action: "DELETE"` and the `design_id`. (Access Level 2 required)
-    - **GET_TOTALS**: Provide `action: "GET_TOTALS"` and a `payload` with the `design_code`. (Access Level 1 required)
+    - **CREATE**: Provide `action: "CREATE"` and a valid `payload`.
+    - **READ**: Provide `action: "READ"` and the `design_id`.
+    - **READ_ALL**: Provide `action: "READ_ALL"`.
+    - **UPDATE**: Provide `action: "UPDATE"`, `design_id`, and a `payload` with fields to update.
+    - **DELETE**: Provide `action: "DELETE"` and the `design_id`.
+    - **GET_TOTALS**: Provide `action: "GET_TOTALS"` and a `payload` with the `design_code`.
     """
     action = request.action
     design_id = request.design_id
@@ -39,6 +40,7 @@ def operate_design(request: DesignOperationRequest, current_user: dict = Depends
             if not create_payload.cloth_purchase_id:
                 raise HTTPException(status_code=400, detail="cloth_purchase_id is required.")
             
+            # Check cloth purchase and available yards
             cloth_purchase_ref = db.collection(CLOTH_COLLECTION).document(create_payload.cloth_purchase_id)
             cloth_purchase_doc = cloth_purchase_ref.get()
 
@@ -52,6 +54,7 @@ def operate_design(request: DesignOperationRequest, current_user: dict = Depends
             if cloth_purchase_data['total_yards'] < total_yards_for_design:
                 raise HTTPException(status_code=400, detail="Not enough yards in the cloth purchase.")
             
+            # Calculate new size distribution
             new_size_distribution = []
             for size_info in create_payload.size_distribution:
                 new_size_distribution.append({
@@ -69,6 +72,7 @@ def operate_design(request: DesignOperationRequest, current_user: dict = Depends
             design_data['created_at'] = datetime.utcnow()
             _, doc_ref = db.collection(DESIGN_COLLECTION).add(design_data)
             
+            # Update cloth purchase with reduced yards
             new_total_yards = cloth_purchase_data['total_yards'] - total_yards_for_design
             cloth_purchase_ref.update({"total_yards": new_total_yards})
             
@@ -89,6 +93,7 @@ def operate_design(request: DesignOperationRequest, current_user: dict = Depends
             designs.append(design_data)
         return designs
 
+    # The following actions require a design_id
     if not design_id and action in ["READ", "UPDATE", "DELETE"]:
         raise HTTPException(status_code=400, detail=f"design_id is required for {action} action.")
 
@@ -106,8 +111,8 @@ def operate_design(request: DesignOperationRequest, current_user: dict = Depends
 
     # --- UPDATE Operation ---
     if action == "UPDATE":
-        if current_user['access_level'] < 2:
-            raise HTTPException(status_code=403, detail="Not enough permissions")
+        if current_user["access_level"] != AccessLevel.LEVEL_2.value:
+            raise HTTPException(status_code=403, detail="You do not have permission to perform this action")
         if not payload:
             raise HTTPException(status_code=400, detail="Payload required for UPDATE action.")
         try:
@@ -118,6 +123,7 @@ def operate_design(request: DesignOperationRequest, current_user: dict = Depends
             design_data = doc.to_dict()
             original_allocated_yards = design_data.get('allocated_yards', 0)
 
+            # Update design document
             doc_ref.update(update_data)
             
             if 'allocated_yards' in update_data:
@@ -128,6 +134,7 @@ def operate_design(request: DesignOperationRequest, current_user: dict = Depends
                 cloth_purchase_doc = cloth_purchase_ref.get()
                 
                 if not cloth_purchase_doc.exists:
+                    # Revert the design update if the cloth purchase is not found
                     doc_ref.update({'allocated_yards': original_allocated_yards})
                     raise HTTPException(status_code=404, detail="Cloth purchase not found.")
                 
@@ -135,6 +142,7 @@ def operate_design(request: DesignOperationRequest, current_user: dict = Depends
                 new_total_yards = cloth_purchase_data['total_yards'] - yardage_difference
                 
                 if new_total_yards < 0:
+                    # Revert the design update if not enough yards
                     doc_ref.update({'allocated_yards': original_allocated_yards})
                     raise HTTPException(status_code=400, detail="Not enough yards in the cloth purchase.")
 
@@ -149,8 +157,8 @@ def operate_design(request: DesignOperationRequest, current_user: dict = Depends
 
     # --- DELETE Operation ---
     if action == "DELETE":
-        if current_user['access_level'] < 2:
-            raise HTTPException(status_code=403, detail="Not enough permissions")
+        if current_user["access_level"] != AccessLevel.LEVEL_2.value:
+            raise HTTPException(status_code=403, detail="You do not have permission to perform this action")
         design_data = doc.to_dict()
         original_allocated_yards = design_data.get('allocated_yards', 0)
         

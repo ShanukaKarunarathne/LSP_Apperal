@@ -1,19 +1,23 @@
 from pydantic import BaseModel, Field
 from typing import Optional
+from enum import Enum
 
-class User(BaseModel):
+class AccessLevel(str, Enum):
+    LEVEL_1 = "read_write"
+    LEVEL_2 = "full_access"
+
+class UserBase(BaseModel):
     username: str
-    email: str
-    access_level: int = Field(..., description="1 for read-only, 2 for full access")
+    access_level: AccessLevel
 
-class UserInDB(User):
-    hashed_password: str
-
-class UserCreate(BaseModel):
-    username: str
-    email: str
+class UserCreate(UserBase):
     password: str
-    access_level: int
+
+class User(UserBase):
+    id: str
+
+    class Config:
+        from_attributes = True
 
 class Token(BaseModel):
     access_token: str
