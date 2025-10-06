@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate-key="page_title">LSP Apparel - Add Cloth</title>
+<style>
+        /* CSS Variables for Theming */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7fafc;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --accent-primary: #38a169; /* Green */
+            --accent-primary-hover: #2f855a;
+            --border-color: #e2e8f0;
+            --border-focus-color: #38a169;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --error-color: #e53e3e;
+            --success-color: #38a169;
+            --body-bg: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+        }
+
+        body.dark-mode {
+            --bg-primary: #1a202c;
+            --bg-secondary: #2d3748;
+            --text-primary: #edf2f7;
+            --text-secondary: #a0aec0;
+            --accent-primary: #48bb78;
+            --accent-primary-hover: #38a169;
+            --border-color: #4a5568;
+            --border-focus-color: #48bb78;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --error-color: #f56565;
+            --success-color: #48bb78;
+            --body-bg: #171923;
+        }
+
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--body-bg);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+        }
+
+        /* Header & Controls */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .controls-container {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .back-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem; /* Adjusted Font Size */
+            box-shadow: 0 2px 5px var(--shadow-color);
+        }
+
+        .back-btn:hover {
+            background: var(--accent-primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Language & Theme Switchers */
+        .language-switcher, .theme-switcher {
+            display: flex;
+            align-items: center;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 5px;
+            border: 1px solid var(--border-color);
+        }
+
+        .lang-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            padding: 5px 10px;
+            color: var(--text-secondary);
+            border-radius: 15px;
+        }
+
+        .lang-btn.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        .theme-switch {
+            display: inline-block;
+            height: 24px;
+            position: relative;
+            width: 44px;
+        }
+
+        .theme-switch input {
+            display: none;
+        }
+
+        .slider {
+            background-color: var(--border-color);
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            background-color: #fff;
+            bottom: 4px;
+            content: "";
+            height: 16px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 16px;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Form Styles */
+        .form-container {
+            background: var(--bg-primary);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: var(--accent-primary);
+            font-size: 2.25rem; /* INCREASED */
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 1rem; /* INCREASED */
+        }
+
+        .input-group input {
+            padding: 1rem; /* Increased padding for larger text */
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1.05rem; /* INCREASED */
+            outline: none;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .input-group input:focus {
+            border-color: var(--border-focus-color);
+            box-shadow: 0 0 0 3px var(--accent-primary-hover-shadow, rgba(56, 161, 105, 0.2));
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1.1rem;
+            border: none;
+            border-radius: 12px;
+            background: var(--accent-primary);
+            color: white;
+            font-size: 1.2rem; /* INCREASED */
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .submit-btn:hover {
+            background: var(--accent-primary-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(56, 161, 105, 0.3);
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 1rem; /* INCREASED */
+            min-height: 1.5rem;
+            font-weight: 600;
+        }
+
+        .error { color: var(--error-color); }
+        .success { color: var(--success-color); }
+
+        .input-hint {
+            font-size: 0.9rem; /* INCREASED */
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column-reverse;
+                align-items: stretch;
+            }
+            .controls-container {
+                justify-content: space-between;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="goBack()" data-translate-key="back_btn">← Back to Dashboard</button>
+        <div class="controls-container">
+            <div class="language-switcher">
+                <button id="lang-en" class="lang-btn active">EN</button>
+                <button id="lang-si" class="lang-btn">සිං</button>
+            </div>
+            <div class="theme-switcher">
+                <label class="theme-switch" for="theme-toggle">
+                    <input type="checkbox" id="theme-toggle" />
+                    <div class="slider"></div>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <h1 data-translate-key="form_title">📋 Add Cloth Purchase</h1>
+        <form id="addClothForm">
+            <div class="form-grid">
+                <div class="input-group">
+                    <label for="cloth_name" data-translate-key="cloth_name_label">Cloth Name</label>
+                    <input type="text" id="cloth_name" name="cloth_name" required tabindex="1">
+                    <span class="input-hint" data-translate-key="hint_enter_continue">Press Enter to continue</span>
+                </div>
+                <div class="input-group">
+                    <label for="supplier_name" data-translate-key="supplier_name_label">Supplier Name</label>
+                    <input type="text" id="supplier_name" name="supplier_name" required tabindex="2">
+                    <span class="input-hint" data-translate-key="hint_enter_continue">Press Enter to continue</span>
+                </div>
+                <div class="input-group">
+                    <label for="total_yards" data-translate-key="total_yards_label">Total Yards</label>
+                    <input type="number" id="total_yards" name="total_yards" step="0.01" inputmode="decimal" required tabindex="3">
+                    <span class="input-hint" data-translate-key="hint_enter_continue">Press Enter to continue</span>
+                </div>
+                <div class="input-group">
+                    <label for="number_of_rolls" data-translate-key="number_of_rolls_label">Number of Rolls</label>
+                    <input type="number" id="number_of_rolls" name="number_of_rolls" inputmode="numeric" required tabindex="4">
+                    <span class="input-hint" data-translate-key="hint_enter_continue">Press Enter to continue</span>
+                </div>
+                <div class="input-group">
+                    <label for="number_of_colors" data-translate-key="number_of_colors_label">Number of Colors</label>
+                    <input type="number" id="number_of_colors" name="number_of_colors" inputmode="numeric" required tabindex="5">
+                    <span class="input-hint" data-translate-key="hint_enter_submit">Press Enter to submit</span>
+                </div>
+            </div>
+            <button type="submit" class="submit-btn" tabindex="6" data-translate-key="submit_btn">Add Cloth Purchase</button>
+            <p id="message" class="message"></p>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- TRANSLATION DATA ---
+            const translations = {
+                en: {
+                    page_title: "LSP Apparel - Add Cloth",
+                    back_btn: "← Back to Dashboard",
+                    form_title: "📋 Add Cloth Purchase",
+                    cloth_name_label: "Cloth Name",
+                    supplier_name_label: "Supplier Name",
+                    total_yards_label: "Total Yards",
+                    number_of_rolls_label: "Number of Rolls",
+                    number_of_colors_label: "Number of Colors",
+                    hint_enter_continue: "Press Enter to continue",
+                    hint_enter_submit: "Press Enter to submit",
+                    submit_btn: "Add Cloth Purchase",
+                    msg_success: "✓ Cloth purchase added successfully!",
+                    msg_fail: "✗ Failed to add cloth purchase.",
+                    msg_error: "✗ An error occurred. Please try again."
+                },
+                si: {
+                    page_title: "LSP ඇඟලුම් - රෙදි එක් කරන්න",
+                    back_btn: "← උපකරණ පුවරුවට ආපසු",
+                    form_title: "📋 රෙදි මිලදී ගැනීමක් එක් කරන්න",
+                    cloth_name_label: "රෙදි වල නම",
+                    supplier_name_label: "සැපයුම්කරුගේ නම",
+                    total_yards_label: "මුළු යා​ර ගණන",
+                    number_of_rolls_label: "රෝල් ගණන",
+                    number_of_colors_label: "පාට ගණන",
+                    hint_enter_continue: "ඉදිරියට යාමට Enter ඔබන්න",
+                    hint_enter_submit: "ඉදිරිපත් කිරීමට Enter ඔබන්න",
+                    submit_btn: "රෙදි මිලදී ගැනීම එක් කරන්න",
+                    msg_success: "✓ රෙදි මිලදී ගැනීම සාර්ථකව එක් කරන ලදී!",
+                    msg_fail: "✗ රෙදි මිලදී ගැනීම එක් කිරීමට අසමත් විය.",
+                    msg_error: "✗ දෝෂයක් ඇතිවිය. කරුණාකර නැවත උත්සාහ කරන්න."
+                }
+            };
+
+            // --- THEME MANAGEMENT ---
+            const themeToggle = document.getElementById('theme-toggle');
+            const setInitialTheme = () => {
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                    document.body.classList.add('dark-mode');
+                    themeToggle.checked = true;
+                }
+            };
+            themeToggle.addEventListener('change', () => {
+                if (themeToggle.checked) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+
+            // --- LANGUAGE MANAGEMENT ---
+            const langEnBtn = document.getElementById('lang-en');
+            const langSiBtn = document.getElementById('lang-si');
+            let currentLanguage = localStorage.getItem('language') || 'en';
+
+            const setLanguage = (lang) => {
+                currentLanguage = lang;
+                localStorage.setItem('language', lang);
+                document.querySelectorAll('[data-translate-key]').forEach(el => {
+                    const key = el.getAttribute('data-translate-key');
+                    if (translations[lang][key]) {
+                        el.textContent = translations[lang][key];
+                    }
+                });
+                document.documentElement.lang = lang;
+                langEnBtn.classList.toggle('active', lang === 'en');
+                langSiBtn.classList.toggle('active', lang === 'si');
+            };
+
+            langEnBtn.addEventListener('click', () => setLanguage('en'));
+            langSiBtn.addEventListener('click', () => setLanguage('si'));
+            
+            // --- INITIALIZATION & AUTH CHECK ---
+            setInitialTheme();
+            setLanguage(currentLanguage);
+
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                // Redirect to login page if no token is found
+                // window.location.href = '/'; 
+            }
+
+            // --- FORM LOGIC ---
+            const form = document.getElementById('addClothForm');
+            const messageEl = document.getElementById('message');
+            const inputs = form.querySelectorAll('input');
+
+            // Enter key navigation
+            inputs.forEach((input, index) => {
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const nextInput = inputs[index + 1];
+                        if (nextInput) {
+                            nextInput.focus();
+                        } else {
+                            form.requestSubmit();
+                        }
+                    }
+                });
+            });
+
+            // Form submission
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault();
+
+                const payload = {
+                    action: "CREATE",
+                    payload: {
+                        cloth_name: document.getElementById('cloth_name').value,
+                        supplier_name: document.getElementById('supplier_name').value,
+                        total_yards: parseFloat(document.getElementById('total_yards').value),
+                        number_of_rolls: parseInt(document.getElementById('number_of_rolls').value),
+                        number_of_colors: parseInt(document.getElementById('number_of_colors').value)
+                    }
+                };
+
+                try {
+                    const response = await fetch('/cloth-purchases/operate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        messageEl.className = 'message success';
+                        messageEl.textContent = translations[currentLanguage].msg_success;
+                        form.reset();
+                        inputs[0].focus();
+                        // Optional: redirect after success
+                        // setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
+                    } else {
+                        const error = await response.json();
+                        messageEl.className = 'message error';
+                        messageEl.textContent = '✗ ' + (error.detail || translations[currentLanguage].msg_fail);
+                    }
+                } catch (error) {
+                    messageEl.className = 'message error';
+                    messageEl.textContent = translations[currentLanguage].msg_error;
+                }
+            });
+
+            // Focus first input on load
+            inputs[0].focus();
+        });
+
+        // Function for back button
+        function goBack() {
+            window.location.href = '/dashboard';
+        }
+    </script>
+</body>
+</html>
