@@ -11,7 +11,7 @@
             --bg-secondary: #f7fafc;
             --text-primary: #2d3748;
             --text-secondary: #718096;
-            --accent-primary: #38a169; /* Green */
+            --accent-primary: #38a169;
             --accent-primary-hover: #2f855a;
             --border-color: #e2e8f0;
             --border-focus-color: #38a169;
@@ -36,7 +36,6 @@
             --body-bg: #171923;
         }
 
-        /* Base Styles */
         * {
             margin: 0;
             padding: 0;
@@ -52,7 +51,6 @@
             color: var(--text-primary);
         }
 
-        /* Header & Controls */
         .header {
             display: flex;
             justify-content: space-between;
@@ -77,7 +75,7 @@
             border-radius: 12px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 1rem; /* Adjusted Font Size */
+            font-size: 1rem;
             box-shadow: 0 2px 5px var(--shadow-color);
         }
 
@@ -87,7 +85,6 @@
             transform: translateY(-2px);
         }
 
-        /* Language & Theme Switchers */
         .language-switcher, .theme-switcher {
             display: flex;
             align-items: center;
@@ -160,19 +157,18 @@
             transform: translateX(20px);
         }
 
-        /* Form Styles */
         .form-container {
             background: var(--bg-primary);
             padding: 2.5rem;
             border-radius: 20px;
             box-shadow: 0 10px 30px var(--shadow-color);
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 0 auto 2rem;
         }
 
         h1 {
             color: var(--accent-primary);
-            font-size: 2.25rem; /* INCREASED */
+            font-size: 2.25rem;
             margin-bottom: 2rem;
             text-align: center;
             font-weight: 700;
@@ -194,14 +190,14 @@
             margin-bottom: 0.5rem;
             color: var(--text-secondary);
             font-weight: 600;
-            font-size: 1rem; /* INCREASED */
+            font-size: 1rem;
         }
 
         .input-group input {
-            padding: 1rem; /* Increased padding for larger text */
+            padding: 1rem;
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            font-size: 1.05rem; /* INCREASED */
+            font-size: 1.05rem;
             outline: none;
             background: var(--bg-secondary);
             color: var(--text-primary);
@@ -209,7 +205,7 @@
 
         .input-group input:focus {
             border-color: var(--border-focus-color);
-            box-shadow: 0 0 0 3px var(--accent-primary-hover-shadow, rgba(56, 161, 105, 0.2));
+            box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.2);
         }
 
         .submit-btn {
@@ -219,7 +215,7 @@
             border-radius: 12px;
             background: var(--accent-primary);
             color: white;
-            font-size: 1.2rem; /* INCREASED */
+            font-size: 1.2rem;
             font-weight: 700;
             cursor: pointer;
             margin-top: 1rem;
@@ -235,7 +231,7 @@
         .message {
             text-align: center;
             margin-top: 1rem;
-            font-size: 1rem; /* INCREASED */
+            font-size: 1rem;
             min-height: 1.5rem;
             font-weight: 600;
         }
@@ -244,10 +240,74 @@
         .success { color: var(--success-color); }
 
         .input-hint {
-            font-size: 0.9rem; /* INCREASED */
+            font-size: 0.9rem;
             color: var(--text-secondary);
             margin-top: 0.25rem;
             font-style: italic;
+        }
+
+        .history-container {
+            background: var(--bg-primary);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            max-width: 1200px;
+            margin: 2rem auto;
+        }
+
+        h2 {
+            color: var(--accent-primary);
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        thead {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        td {
+            font-size: 0.95rem;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 1rem;
         }
 
         @media (max-width: 768px) {
@@ -261,8 +321,14 @@
             .form-grid {
                 grid-template-columns: 1fr;
             }
-            .form-container {
+            .form-container, .history-container {
                 padding: 1.5rem;
+            }
+            table {
+                font-size: 0.85rem;
+            }
+            th, td {
+                padding: 0.75rem;
             }
         }
     </style>
@@ -319,9 +385,15 @@
         </form>
     </div>
 
+    <div class="history-container">
+        <h2 data-translate-key="history_title">📜 Purchase History</h2>
+        <div id="historyContent">
+            <div class="loading" data-translate-key="loading">Loading...</div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // --- TRANSLATION DATA ---
             const translations = {
                 en: {
                     page_title: "LSP Apparel - Add Cloth",
@@ -337,27 +409,44 @@
                     submit_btn: "Add Cloth Purchase",
                     msg_success: "✓ Cloth purchase added successfully!",
                     msg_fail: "✗ Failed to add cloth purchase.",
-                    msg_error: "✗ An error occurred. Please try again."
+                    msg_error: "✗ An error occurred. Please try again.",
+                    history_title: "📜 Purchase History",
+                    loading: "Loading...",
+                    no_data: "No purchase records found.",
+                    th_cloth_name: "Cloth Name",
+                    th_supplier: "Supplier",
+                    th_yards: "Total Yards",
+                    th_rolls: "Rolls",
+                    th_colors: "Colors",
+                    th_date: "Date Added"
                 },
                 si: {
-                    page_title: "LSP ඇඟලුම් - රෙදි එක් කරන්න",
+                    page_title: "LSP ඇඳුම් - රෙදි එක් කරන්න",
                     back_btn: "← උපකරණ පුවරුවට ආපසු",
                     form_title: "📋 රෙදි මිලදී ගැනීමක් එක් කරන්න",
                     cloth_name_label: "රෙදි වල නම",
                     supplier_name_label: "සැපයුම්කරුගේ නම",
-                    total_yards_label: "මුළු යා​ර ගණන",
+                    total_yards_label: "මුළු යාර්ඩ් ගණන",
                     number_of_rolls_label: "රෝල් ගණන",
-                    number_of_colors_label: "පාට ගණන",
+                    number_of_colors_label: "​පා​ට ගණන",
                     hint_enter_continue: "ඉදිරියට යාමට Enter ඔබන්න",
                     hint_enter_submit: "ඉදිරිපත් කිරීමට Enter ඔබන්න",
                     submit_btn: "රෙදි මිලදී ගැනීම එක් කරන්න",
                     msg_success: "✓ රෙදි මිලදී ගැනීම සාර්ථකව එක් කරන ලදී!",
                     msg_fail: "✗ රෙදි මිලදී ගැනීම එක් කිරීමට අසමත් විය.",
-                    msg_error: "✗ දෝෂයක් ඇතිවිය. කරුණාකර නැවත උත්සාහ කරන්න."
+                    msg_error: "✗ දෝෂයක් ඇතිවිය. කරුණාකර නැවත උත්සාහ කරන්න.",
+                    history_title: "📜 මිලදී ගැනීම් ඉතිහාසය",
+                    loading: "පූරණය වෙමින්...",
+                    no_data: "මිලදී ගැනීම් වාර්තා හමු නොවීය.",
+                    th_cloth_name: "රෙදි නම",
+                    th_supplier: "සැපයුම්කරු",
+                    th_yards: "මුළු යාර්ඩ්",
+                    th_rolls: "රෝල්",
+                    th_colors: "පාට",
+                    th_date: "එක් කළ දිනය"
                 }
             };
 
-            // --- THEME MANAGEMENT ---
             const themeToggle = document.getElementById('theme-toggle');
             const setInitialTheme = () => {
                 const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -377,7 +466,6 @@
                 }
             });
 
-            // --- LANGUAGE MANAGEMENT ---
             const langEnBtn = document.getElementById('lang-en');
             const langSiBtn = document.getElementById('lang-si');
             let currentLanguage = localStorage.getItem('language') || 'en';
@@ -399,22 +487,18 @@
             langEnBtn.addEventListener('click', () => setLanguage('en'));
             langSiBtn.addEventListener('click', () => setLanguage('si'));
             
-            // --- INITIALIZATION & AUTH CHECK ---
             setInitialTheme();
             setLanguage(currentLanguage);
 
             const token = localStorage.getItem('accessToken');
             if (!token) {
-                // Redirect to login page if no token is found
                 // window.location.href = '/'; 
             }
 
-            // --- FORM LOGIC ---
             const form = document.getElementById('addClothForm');
             const messageEl = document.getElementById('message');
             const inputs = form.querySelectorAll('input');
 
-            // Enter key navigation
             inputs.forEach((input, index) => {
                 input.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
@@ -429,7 +513,61 @@
                 });
             });
 
-            // Form submission
+            const loadPurchaseHistory = async () => {
+                const historyContent = document.getElementById('historyContent');
+                try {
+                    const response = await fetch('/cloth-purchases/operate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ action: "READ_ALL" })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.length === 0) {
+                            historyContent.innerHTML = `<div class="no-data" data-translate-key="no_data">${translations[currentLanguage].no_data}</div>`;
+                        } else {
+                            const tableHTML = `
+                                <div class="table-wrapper">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th data-translate-key="th_cloth_name">${translations[currentLanguage].th_cloth_name}</th>
+                                                <th data-translate-key="th_supplier">${translations[currentLanguage].th_supplier}</th>
+                                                <th data-translate-key="th_yards">${translations[currentLanguage].th_yards}</th>
+                                                <th data-translate-key="th_rolls">${translations[currentLanguage].th_rolls}</th>
+                                                <th data-translate-key="th_colors">${translations[currentLanguage].th_colors}</th>
+                                                <th data-translate-key="th_date">${translations[currentLanguage].th_date}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.map(item => `
+                                                <tr>
+                                                    <td>${item.cloth_name}</td>
+                                                    <td>${item.supplier_name}</td>
+                                                    <td>${item.total_yards}</td>
+                                                    <td>${item.number_of_rolls}</td>
+                                                    <td>${item.number_of_colors}</td>
+                                                    <td>${new Date(item.created_at).toLocaleString()}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `;
+                            historyContent.innerHTML = tableHTML;
+                        }
+                    } else {
+                        historyContent.innerHTML = `<div class="error">${translations[currentLanguage].msg_error}</div>`;
+                    }
+                } catch (error) {
+                    historyContent.innerHTML = `<div class="error">${translations[currentLanguage].msg_error}</div>`;
+                }
+            };
+
             form.addEventListener('submit', async function(event) {
                 event.preventDefault();
 
@@ -459,8 +597,7 @@
                         messageEl.textContent = translations[currentLanguage].msg_success;
                         form.reset();
                         inputs[0].focus();
-                        // Optional: redirect after success
-                        // setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
+                        loadPurchaseHistory();
                     } else {
                         const error = await response.json();
                         messageEl.className = 'message error';
@@ -472,11 +609,10 @@
                 }
             });
 
-            // Focus first input on load
+            loadPurchaseHistory();
             inputs[0].focus();
         });
 
-        // Function for back button
         function goBack() {
             window.location.href = '/dashboard';
         }
