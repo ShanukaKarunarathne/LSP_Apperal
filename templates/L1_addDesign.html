@@ -157,13 +157,13 @@
             transform: translateX(20px);
         }
 
-        .form-container {
+        .form-container, .history-container {
             background: var(--bg-primary);
             padding: 2.5rem;
             border-radius: 20px;
             box-shadow: 0 10px 30px var(--shadow-color);
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 0 auto 2rem;
         }
 
         h1 {
@@ -171,6 +171,13 @@
             font-size: 2.25rem;
             margin-bottom: 2rem;
             text-align: center;
+            font-weight: 700;
+        }
+
+        h2 {
+            color: var(--accent-primary);
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
             font-weight: 700;
         }
 
@@ -206,6 +213,14 @@
         .input-group input:focus, .input-group select:focus {
             border-color: var(--border-focus-color);
             box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.2);
+        }
+
+        .input-group input:invalid:not(:placeholder-shown) {
+            border-color: var(--error-color);
+        }
+
+        .input-group input:valid:not(:placeholder-shown) {
+            border-color: var(--success-color);
         }
 
         .size-distribution-section {
@@ -359,7 +374,63 @@
         .error { color: var(--error-color); }
         .success { color: var(--success-color); }
 
-        /* Success Modal */
+        /* History Table Styles */
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        th, td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-primary);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .no-data, .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -374,14 +445,30 @@
 
         .modal-content {
             background-color: var(--bg-primary);
-            margin: 15% auto;
+            margin: 10% auto;
             padding: 2rem;
             border-radius: 20px;
             width: 90%;
-            max-width: 400px;
+            max-width: 600px;
             text-align: center;
             box-shadow: 0 10px 40px var(--shadow-color);
             animation: slideIn 0.3s ease;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--text-secondary);
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: var(--error-color);
         }
 
         .modal-icon {
@@ -414,6 +501,37 @@
         .modal-btn:hover {
             background: var(--accent-primary-hover);
         }
+        
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .edit-btn {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .delete-btn {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #dc2626;
+            transform: translateY(-2px);
+        }
 
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -436,8 +554,17 @@
             .form-grid {
                 grid-template-columns: 1fr;
             }
-            .form-container {
+            .form-container, .history-container {
                 padding: 1.5rem;
+            }
+            th, td {
+                padding: 0.75rem 1rem;
+                font-size: 0.85rem;
+            }
+            .action-btn {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.8rem;
+                margin-bottom: 0.25rem;
             }
         }
     </style>
@@ -465,7 +592,7 @@
             <div class="form-grid">
                 <div class="input-group">
                     <label for="design_code" data-translate-key="design_code_label">Design Code</label>
-                    <input type="text" id="design_code" name="design_code" required>
+                    <input type="text" id="design_code" name="design_code" required placeholder="Enter design code">
                 </div>
                 <div class="input-group">
                     <label for="cloth_purchase_id" data-translate-key="cloth_purchase_label">Cloth Purchase</label>
@@ -475,17 +602,16 @@
                 </div>
                 <div class="input-group">
                     <label for="allocated_yards_per_piece" data-translate-key="yards_per_piece_label">Yards Per Piece</label>
-                    <input type="number" id="allocated_yards_per_piece" name="allocated_yards_per_piece" step="0.01" required>
+                    <input type="number" id="allocated_yards_per_piece" name="allocated_yards_per_piece" step="0.01" min="0.01" required placeholder="0.00">
                 </div>
                 <div class="input-group">
                     <label for="number_of_pieces" data-translate-key="number_of_pieces_label">Number of Pieces</label>
-                    <input type="number" id="number_of_pieces" name="number_of_pieces" min="1" required>
+                    <input type="number" id="number_of_pieces" name="number_of_pieces" min="1" required placeholder="0">
                 </div>
 
                 <div class="size-distribution-section">
                     <h3 data-translate-key="size_distribution_title">Size Distribution</h3>
                     
-                    <!-- Size Category Selection -->
                     <div class="size-category-selection">
                         <label class="category-checkbox">
                             <input type="checkbox" id="category-s-3xl" onchange="toggleSizeCategory('s-3xl')">
@@ -496,90 +622,32 @@
                             <span data-translate-key="category_28_38">28-38</span>
                         </label>
                     </div>
-
-                    <!-- S-3XL Size Inputs (Hidden by default) -->
                     <div id="sizes-s-3xl" class="size-category-container" style="display: none;">
                         <h4 data-translate-key="category_s_3xl">S-3XL Sizes</h4>
                         <div class="size-inputs-grid">
-                            <div class="input-group">
-                                <label>S</label>
-                                <input type="number" class="size-quantity" data-size="S" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>M</label>
-                                <input type="number" class="size-quantity" data-size="M" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>L</label>
-                                <input type="number" class="size-quantity" data-size="L" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>XL</label>
-                                <input type="number" class="size-quantity" data-size="XL" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>2XL</label>
-                                <input type="number" class="size-quantity" data-size="2XL" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>3XL</label>
-                                <input type="number" class="size-quantity" data-size="3XL" min="0" value="0">
-                            </div>
+                            <div class="input-group"><label>S</label><input type="number" class="size-quantity" data-size="S" min="0" value="0"></div>
+                            <div class="input-group"><label>M</label><input type="number" class="size-quantity" data-size="M" min="0" value="0"></div>
+                            <div class="input-group"><label>L</label><input type="number" class="size-quantity" data-size="L" min="0" value="0"></div>
+                            <div class="input-group"><label>XL</label><input type="number" class="size-quantity" data-size="XL" min="0" value="0"></div>
+                            <div class="input-group"><label>2XL</label><input type="number" class="size-quantity" data-size="2XL" min="0" value="0"></div>
+                            <div class="input-group"><label>3XL</label><input type="number" class="size-quantity" data-size="3XL" min="0" value="0"></div>
                         </div>
                     </div>
-
-                    <!-- 28-38 Size Inputs (Hidden by default) -->
                     <div id="sizes-28-38" class="size-category-container" style="display: none;">
                         <h4 data-translate-key="category_28_38">28-38 Sizes</h4>
                         <div class="size-inputs-grid">
-                            <div class="input-group">
-                                <label>Free</label>
-                                <input type="number" class="size-quantity" data-size="Free" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>28</label>
-                                <input type="number" class="size-quantity" data-size="28" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>29</label>
-                                <input type="number" class="size-quantity" data-size="29" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>30</label>
-                                <input type="number" class="size-quantity" data-size="30" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>31</label>
-                                <input type="number" class="size-quantity" data-size="31" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>32</label>
-                                <input type="number" class="size-quantity" data-size="32" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>33</label>
-                                <input type="number" class="size-quantity" data-size="33" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>34</label>
-                                <input type="number" class="size-quantity" data-size="34" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>35</label>
-                                <input type="number" class="size-quantity" data-size="35" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>36</label>
-                                <input type="number" class="size-quantity" data-size="36" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>37</label>
-                                <input type="number" class="size-quantity" data-size="37" min="0" value="0">
-                            </div>
-                            <div class="input-group">
-                                <label>38</label>
-                                <input type="number" class="size-quantity" data-size="38" min="0" value="0">
-                            </div>
+                            <div class="input-group"><label>Free</label><input type="number" class="size-quantity" data-size="Free" min="0" value="0"></div>
+                            <div class="input-group"><label>28</label><input type="number" class="size-quantity" data-size="28" min="0" value="0"></div>
+                            <div class="input-group"><label>29</label><input type="number" class="size-quantity" data-size="29" min="0" value="0"></div>
+                            <div class="input-group"><label>30</label><input type="number" class="size-quantity" data-size="30" min="0" value="0"></div>
+                            <div class="input-group"><label>31</label><input type="number" class="size-quantity" data-size="31" min="0" value="0"></div>
+                            <div class="input-group"><label>32</label><input type="number" class="size-quantity" data-size="32" min="0" value="0"></div>
+                            <div class="input-group"><label>33</label><input type="number" class="size-quantity" data-size="33" min="0" value="0"></div>
+                            <div class="input-group"><label>34</label><input type="number" class="size-quantity" data-size="34" min="0" value="0"></div>
+                            <div class="input-group"><label>35</label><input type="number" class="size-quantity" data-size="35" min="0" value="0"></div>
+                            <div class="input-group"><label>36</label><input type="number" class="size-quantity" data-size="36" min="0" value="0"></div>
+                            <div class="input-group"><label>37</label><input type="number" class="size-quantity" data-size="37" min="0" value="0"></div>
+                            <div class="input-group"><label>38</label><input type="number" class="size-quantity" data-size="38" min="0" value="0"></div>
                         </div>
                     </div>
                 </div>
@@ -588,8 +656,15 @@
             <p id="message" class="message"></p>
         </form>
     </div>
+    
+    <div class="history-container">
+        <h2 data-translate-key="history_title">📜 Design History</h2>
+        <div id="historyContent">
+            <div class="loading" data-translate-key="loading">Loading...</div>
+        </div>
+    </div>
 
-    <!-- Success Modal -->
+
     <div id="successModal" class="modal">
         <div class="modal-content">
             <div class="modal-icon">✅</div>
@@ -599,9 +674,48 @@
         </div>
     </div>
 
+    <div id="editDesignModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeEditDesignModal">&times;</span>
+            <h2 data-translate-key="edit_design_title">Edit Design</h2>
+            <form id="editDesignForm">
+                <input type="hidden" id="edit-design-id">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="edit-design-code" data-translate-key="design_code_label">Design Code</label>
+                        <input type="text" id="edit-design-code" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label for="edit-allocated-yards" data-translate-key="allocated_yards_label">Allocated Yards</label>
+                        <input type="number" id="edit-allocated-yards" step="0.01" min="0.01" required>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn" data-translate-key="save_changes_btn">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="authModal" class="modal">
+      <div class="modal-content" style="max-width: 400px;">
+        <span class="close-btn" id="closeAuthModal">&times;</span>
+        <h2 data-translate-key="auth_required">Authorization Required</h2>
+        <p data-translate-key="auth_prompt">Please enter Level 2 credentials to proceed.</p>
+        <div class="input-group">
+          <label for="username" data-translate-key="username">Username</label>
+          <input type="text" id="modal-username" name="username" required>
+        </div>
+        <div class="input-group">
+          <label for="password" data-translate-key="password">Password</label>
+          <input type="password" id="modal-password" name="password" required>
+        </div>
+        <button id="modal-submit" class="submit-btn" data-translate-key="authorize">Authorize</button>
+        <p id="modal-error" class="message error"></p>
+      </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // --- TRANSLATION DATA ---
+            let allDesigns = [];
             const translations = {
                 en: {
                     page_title: "LSP Apparel - Add Design",
@@ -613,41 +727,72 @@
                     yards_per_piece_label: "Yards Per Piece",
                     number_of_pieces_label: "Number of Pieces",
                     size_distribution_title: "Size Distribution",
-                    size_label: "Size",
-                    quantity_label: "Quantity",
-                    add_size_btn: "+ Add Another Size",
                     submit_btn: "Create Design",
                     modal_title: "Success!",
                     modal_message: "Design has been created successfully.",
                     modal_btn: "Go to Dashboard",
                     msg_error: "✗ An error occurred. Please try again.",
-                    msg_validation: "✗ Please fill in all required fields."
+                    msg_validation: "✗ Please fill in all required fields and select at least one size.",
+                    history_title: "📜 Design History",
+                    loading: "Loading...",
+                    th_design_code: "Design Code",
+                    th_allocated_yards: "Allocated Yards",
+                    th_date: "Date Added",
+                    th_actions: "Actions",
+                    edit: "Edit",
+                    delete: "Delete",
+                    delete_success: "Design deleted successfully.",
+                    edit_design_title: "Edit Design",
+                    allocated_yards_label: "Allocated Yards",
+                    save_changes_btn: "Save Changes",
+                    update_success: "Design updated successfully.",
+                    no_data: "No designs found.",
+                    auth_required: "Authorization Required",
+                    auth_prompt: "Please enter Level 2 credentials to proceed.",
+                    username: "Username",
+                    password: "Password",
+                    authorize: "Authorize",
+                    auth_fail: "✗ Invalid credentials or insufficient access level."
                 },
                 si: {
-                    page_title: "LSP ඇඟලුම් - ඩිසයින් එක් කරන්න",
+                    page_title: "LSP ඇඳුම් - ඩිසයින් එක් කරන්න",
                     back_btn: "← උපකරණ පුවරුවට ආපසු",
                     form_title: "✨ නව ඩිසයින් එක් කරන්න",
                     design_code_label: "ඩිසයින් කේතය",
                     cloth_purchase_label: "රෙදි මිලදී ගැනීම",
                     select_cloth: "රෙදි මිලදී ගැනීමක් තෝරන්න...",
-                    yards_per_piece_label: "එක් කෑල්ලකට යාර",
-                    number_of_pieces_label: "පොටවල් ගණන",
+                    yards_per_piece_label: "එක් කිල්ලකට යාර",
+                    number_of_pieces_label: "පෝෂවල් ගණන",
                     size_distribution_title: "ප්‍රමාණ බෙදා හැරීම",
-                    size_label: "ප්‍රමාණය",
-                    quantity_label: "ප්‍රමාණය",
-                    add_size_btn: "+ තවත් ප්‍රමාණයක් එක් කරන්න",
                     submit_btn: "ඩිසයින් සාදන්න",
                     modal_title: "සාර්ථකයි!",
                     modal_message: "ඩිසයින් සාර්ථකව නිර්මාණය කර ඇත.",
                     modal_btn: "උපකරණ පුවරුවට යන්න",
                     msg_error: "✗ දෝෂයක් ඇතිවිය. කරුණාකර නැවත උත්සාහ කරන්න.",
-                    msg_validation: "✗ කරුණාකර සියලුම අවශ්‍ය ක්ෂේත්‍ර පුරවන්න."
+                    msg_validation: "✗ කරුණාකර සියළුම අවශ්‍ය ක්ෂේත්‍ර පුරවන්න සහ අවම වශයෙන් එක් ප්‍රමාණයක් තෝරන්න.",
+                    history_title: "📜 සැලසුම් ඉතිහාසය",
+                    loading: "පැටවීම වෙමින්...",
+                    th_design_code: "සැලසුම් කේතය",
+                    th_allocated_yards: "වෙන් කළ යාර",
+                    th_date: "එක් කළ දිනය",
+                    th_actions: "ක්‍රියා",
+                    edit: "වෙනස් කරන්න",
+                    delete: "මකන්න",
+                    delete_success: "සැලසුම සාර්ථකව මකා දමන ලදී.",
+                    edit_design_title: "සැලසුම සංස්කරණය කරන්න",
+                    allocated_yards_label: "වෙන් කළ යාර",
+                    save_changes_btn: "වෙනස්කම් සුරකින්න",
+                    update_success: "සැලසුම සාර්ථකව යාවත්කාලීන කරන ලදී.",
+                    no_data: "සැලසුම් හමු නොවීය.",
+                    auth_required: "අනුමත කිරීම අවශ්‍යයි",
+                    auth_prompt: "කරුණාකර ඉදිරියට යාමට මට්ටම 2 අක්තපත්‍ර ඇතුළත් කරන්න.",
+                    username: "පරිශීලක නාමය",
+                    password: "මුරපදය",
+                    authorize: "අනුමත කරන්න",
+                    auth_fail: "✗ වැරදි අක්තපත්‍ර හෝ ප්‍රමාණවත් ප්‍රවේශ මට්ටමක් නොමැත."
                 }
             };
 
-
-
-            // --- THEME MANAGEMENT ---
             const themeToggle = document.getElementById('theme-toggle');
             const setInitialTheme = () => {
                 const savedTheme = localStorage.getItem('theme');
@@ -667,7 +812,6 @@
                 }
             });
 
-            // --- LANGUAGE MANAGEMENT ---
             const langEnBtn = document.getElementById('lang-en');
             const langSiBtn = document.getElementById('lang-si');
             let currentLanguage = localStorage.getItem('language') || 'en';
@@ -678,14 +822,15 @@
                 document.querySelectorAll('[data-translate-key]').forEach(el => {
                     const key = el.getAttribute('data-translate-key');
                     if (translations[lang][key]) {
-                        if (el.tagName === 'INPUT' && el.type === 'submit') {
-                            el.value = translations[lang][key];
+                        if (el.tagName === 'INPUT' && el.type === 'text') {
+                            el.placeholder = translations[lang][key];
                         } else {
                             el.textContent = translations[lang][key];
                         }
                     }
                 });
                 document.documentElement.lang = lang;
+                document.title = translations[lang].page_title;
                 langEnBtn.classList.toggle('active', lang === 'en');
                 langSiBtn.classList.toggle('active', lang === 'si');
             };
@@ -693,18 +838,235 @@
             langEnBtn.addEventListener('click', () => setLanguage('en'));
             langSiBtn.addEventListener('click', () => setLanguage('si'));
 
-            // --- INITIALIZATION & AUTH CHECK ---
             setInitialTheme();
             setLanguage(currentLanguage);
 
             const token = localStorage.getItem('accessToken');
             if (!token) {
-                // Redirect to login if no token
                 // window.location.href = '/';
             }
+            
+            const authModal = document.getElementById('authModal');
+            const editDesignModal = document.getElementById('editDesignModal');
+            const modalError = document.getElementById('modal-error');
 
-            // --- LOAD CLOTH PURCHASES ---
+            document.getElementById('closeAuthModal').onclick = () => {
+                authModal.style.display = "none";
+                document.getElementById('modal-username').value = '';
+                document.getElementById('modal-password').value = '';
+                modalError.textContent = '';
+            };
+            
+            document.getElementById('closeEditDesignModal').onclick = () => editDesignModal.style.display = "none";
+            
+            window.onclick = function(event) {
+                if (event.target == authModal) {
+                    authModal.style.display = "none";
+                    document.getElementById('modal-username').value = '';
+                    document.getElementById('modal-password').value = '';
+                    modalError.textContent = '';
+                }
+                if (event.target == editDesignModal) editDesignModal.style.display = "none";
+            }
+            
+            let currentAction = null;
+            let currentItemId = null;
+            
+            window.handleEdit = (id) => {
+                const item = allDesigns.find(d => d.id === id);
+                if(item) {
+                    document.getElementById('edit-design-id').value = item.id;
+                    document.getElementById('edit-design-code').value = item.design_code;
+                    document.getElementById('edit-allocated-yards').value = item.allocated_yards;
+                    editDesignModal.style.display = 'block';
+                }
+            }
+
+            window.handleDelete = (id) => {
+                if (confirm(translations[currentLanguage].delete_confirm || 'Are you sure you want to delete this design?')) {
+                    currentItemId = id;
+                    currentAction = 'delete';
+                    authModal.style.display = 'block';
+                }
+            }
+            
+            document.getElementById('editDesignForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const allocatedYards = parseFloat(document.getElementById('edit-allocated-yards').value);
+                
+                if (!allocatedYards || allocatedYards <= 0) {
+                    alert(translations[currentLanguage].msg_validation);
+                    return;
+                }
+                
+                currentItemId = document.getElementById('edit-design-id').value;
+                currentAction = 'edit';
+                editDesignModal.style.display = 'none';
+                authModal.style.display = 'block';
+            });
+
+            document.getElementById('modal-submit').addEventListener('click', async () => {
+                const username = document.getElementById('modal-username').value.trim();
+                const password = document.getElementById('modal-password').value;
+
+                if (!username || !password) {
+                    modalError.textContent = translations[currentLanguage].msg_validation;
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('password', password);
+
+                try {
+                    const response = await fetch('/users/token', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.access_level === 'full_access') {
+                            authModal.style.display = 'none';
+                            document.getElementById('modal-username').value = '';
+                            document.getElementById('modal-password').value = '';
+                            modalError.textContent = '';
+                            
+                            if (currentAction === 'delete') {
+                                await deleteDesign(currentItemId, data.access_token);
+                            } else if (currentAction === 'edit') {
+                                await updateDesign(currentItemId, data.access_token);
+                            }
+                        } else {
+                            modalError.textContent = translations[currentLanguage].auth_fail;
+                        }
+                    } else {
+                        modalError.textContent = translations[currentLanguage].auth_fail;
+                    }
+                } catch (error) {
+                    modalError.textContent = translations[currentLanguage].msg_error;
+                }
+            });
+            
+            const messageEl = document.getElementById('message');
+            
+            const updateDesign = async (id, authToken) => {
+                const payload = {
+                    allocated_yards: parseFloat(document.getElementById('edit-allocated-yards').value)
+                };
+
+                try {
+                    const response = await fetch('/designs/operate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ action: "UPDATE", design_id: id, payload: payload })
+                    });
+                    if (response.ok) {
+                        messageEl.className = 'message success';
+                        messageEl.textContent = translations[currentLanguage].update_success;
+                        setTimeout(() => messageEl.textContent = '', 3000);
+                        loadDesignHistory();
+                    } else {
+                        const error = await response.json();
+                        messageEl.className = 'message error';
+                        messageEl.textContent = '✗ ' + (error.detail || translations[currentLanguage].msg_error);
+                        setTimeout(() => messageEl.textContent = '', 3000);
+                    }
+                } catch (error) {
+                    messageEl.className = 'message error';
+                    messageEl.textContent = translations[currentLanguage].msg_error;
+                    setTimeout(() => messageEl.textContent = '', 3000);
+                }
+            };
+
+            const deleteDesign = async (id, authToken) => {
+                try {
+                    const response = await fetch('/designs/operate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ action: "DELETE", design_id: id })
+                    });
+
+                    if (response.ok) {
+                        messageEl.className = 'message success';
+                        messageEl.textContent = translations[currentLanguage].delete_success;
+                        setTimeout(() => messageEl.textContent = '', 3000);
+                        loadDesignHistory();
+                    } else {
+                        const error = await response.json();
+                        messageEl.className = 'message error';
+                        messageEl.textContent = '✗ ' + (error.detail || translations[currentLanguage].msg_error);
+                        setTimeout(() => messageEl.textContent = '', 3000);
+                    }
+                } catch (error) {
+                    messageEl.className = 'message error';
+                    messageEl.textContent = translations[currentLanguage].msg_error;
+                    setTimeout(() => messageEl.textContent = '', 3000);
+                }
+            };
+            
+            const loadDesignHistory = async () => {
+                const historyContent = document.getElementById('historyContent');
+                try {
+                    const response = await fetch('/designs/operate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ action: "READ_ALL" })
+                    });
+
+                    if (response.ok) {
+                        allDesigns = await response.json();
+                        if (allDesigns.length === 0) {
+                            historyContent.innerHTML = `<div class="no-data">${translations[currentLanguage].no_data}</div>`;
+                        } else {
+                            const tableHTML = `
+                                <div class="table-wrapper">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>${translations[currentLanguage].th_design_code}</th>
+                                                <th>${translations[currentLanguage].th_allocated_yards}</th>
+                                                <th>${translations[currentLanguage].th_date}</th>
+                                                <th>${translations[currentLanguage].th_actions}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${allDesigns.map(item => `
+                                                <tr>
+                                                    <td>${item.design_code}</td>
+                                                    <td>${item.allocated_yards}</td>
+                                                    <td>${new Date(item.created_at).toLocaleString()}</td>
+                                                    <td>
+                                                        <button class="action-btn edit-btn" onclick="handleEdit('${item.id}')">${translations[currentLanguage].edit}</button>
+                                                        <button class="action-btn delete-btn" onclick="handleDelete('${item.id}')">${translations[currentLanguage].delete}</button>
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `;
+                            historyContent.innerHTML = tableHTML;
+                        }
+                    } else {
+                        historyContent.innerHTML = `<div class="error">${translations[currentLanguage].msg_error}</div>`;
+                    }
+                } catch (error) {
+                    historyContent.innerHTML = `<div class="error">${translations[currentLanguage].msg_error}</div>`;
+                }
+            };
+
             loadClothPurchases();
+            loadDesignHistory();
 
             async function loadClothPurchases() {
                 try {
@@ -732,18 +1094,25 @@
                 }
             }
 
-            // --- FORM SUBMISSION ---
             const form = document.getElementById('addDesignForm');
-            const messageEl = document.getElementById('message');
 
             form.addEventListener('submit', async function(event) {
                 event.preventDefault();
 
+                const designCode = document.getElementById('design_code').value.trim();
+                const clothPurchaseId = document.getElementById('cloth_purchase_id').value;
+                const yardsPerPiece = parseFloat(document.getElementById('allocated_yards_per_piece').value);
+                const numberOfPieces = parseInt(document.getElementById('number_of_pieces').value);
+
+                if (!designCode || !clothPurchaseId || !yardsPerPiece || yardsPerPiece <= 0 || !numberOfPieces || numberOfPieces <= 0) {
+                    messageEl.className = 'message error';
+                    messageEl.textContent = translations[currentLanguage].msg_validation;
+                    setTimeout(() => messageEl.textContent = '', 3000);
+                    return;
+                }
+
                 const sizeDistribution = [];
-                
-                // Collect sizes from both categories
                 const allSizeInputs = document.querySelectorAll('.size-quantity[data-size]');
-                
                 allSizeInputs.forEach(input => {
                     const sizeName = input.getAttribute('data-size');
                     const quantity = parseInt(input.value) || 0;
@@ -759,18 +1128,25 @@
                 if (sizeDistribution.length === 0) {
                     messageEl.className = 'message error';
                     messageEl.textContent = translations[currentLanguage].msg_validation;
+                    setTimeout(() => messageEl.textContent = '', 3000);
                     return;
                 }
 
-                // ... rest of the submission code remains the same
+                const totalSizeQuantity = sizeDistribution.reduce((sum, item) => sum + item.quantity, 0);
+                if (totalSizeQuantity !== numberOfPieces) {
+                    messageEl.className = 'message error';
+                    messageEl.textContent = `✗ Total size quantities (${totalSizeQuantity}) must equal number of pieces (${numberOfPieces})`;
+                    setTimeout(() => messageEl.textContent = '', 5000);
+                    return;
+                }
 
                 const payload = {
                     action: "CREATE",
                     payload: {
-                        design_code: document.getElementById('design_code').value,
-                        cloth_purchase_id: document.getElementById('cloth_purchase_id').value,
-                        allocated_yards_per_piece: parseFloat(document.getElementById('allocated_yards_per_piece').value),
-                        number_of_pieces: parseInt(document.getElementById('number_of_pieces').value),
+                        design_code: designCode,
+                        cloth_purchase_id: clothPurchaseId,
+                        allocated_yards_per_piece: yardsPerPiece,
+                        number_of_pieces: numberOfPieces,
                         size_distribution: sizeDistribution
                     }
                 };
@@ -787,51 +1163,47 @@
 
                     if (response.ok) {
                         document.getElementById('successModal').style.display = 'block';
+                        form.reset();
+                        document.getElementById('category-s-3xl').checked = false;
+                        document.getElementById('category-28-38').checked = false;
+                        document.getElementById('sizes-s-3xl').style.display = 'none';
+                        document.getElementById('sizes-28-38').style.display = 'none';
+                        loadDesignHistory();
                     } else {
                         const error = await response.json();
                         messageEl.className = 'message error';
                         messageEl.textContent = '✗ ' + (error.detail || translations[currentLanguage].msg_error);
+                        setTimeout(() => messageEl.textContent = '', 5000);
                     }
                 } catch (error) {
                     messageEl.className = 'message error';
                     messageEl.textContent = translations[currentLanguage].msg_error;
+                    setTimeout(() => messageEl.textContent = '', 3000);
                 }
             });
         });
 
-        // --- ENTER KEY NAVIGATION (DYNAMIC) ---
         function setupEnterKeyNavigation() {
             const form = document.getElementById('addDesignForm');
-            
             form.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
                     e.preventDefault();
-                    
-                    // Get all visible inputs
                     const allInputs = Array.from(form.querySelectorAll('input:not([type="checkbox"]):not([type="submit"]), select'));
-                    const visibleInputs = allInputs.filter(input => {
-                        return input.offsetParent !== null && !input.disabled;
-                    });
-                    
+                    const visibleInputs = allInputs.filter(input => input.offsetParent !== null && !input.disabled && !input.readOnly);
                     const currentIndex = visibleInputs.indexOf(e.target);
                     
                     if (currentIndex > -1 && currentIndex < visibleInputs.length - 1) {
-                        // Move to next visible input
                         const nextInput = visibleInputs[currentIndex + 1];
                         nextInput.focus();
-                        nextInput.select(); // Optional: select text
+                        nextInput.select();
                     } else if (currentIndex === visibleInputs.length - 1) {
-                        // Last input - submit form
                         form.dispatchEvent(new Event('submit', { cancelable: true }));
                     }
                 }
             });
         }
-
-        // Call this function inside DOMContentLoaded
         setupEnterKeyNavigation();
 
-        // --- SIZE CATEGORY MANAGEMENT ---
         function toggleSizeCategory(category) {
             const checkbox = document.getElementById(`category-${category}`);
             const container = document.getElementById(`sizes-${category}`);
@@ -840,34 +1212,10 @@
                 container.style.display = 'block';
             } else {
                 container.style.display = 'none';
-                // Reset all inputs in this category to 0
                 container.querySelectorAll('.size-quantity').forEach(input => {
                     input.value = 0;
                 });
             }
-        }
-
-        // --- SIZE INPUT MANAGEMENT ---
-        function addSizeInput() {
-            const container = document.getElementById('size-inputs-container');
-            const newRow = document.createElement('div');
-            newRow.className = 'size-input-row';
-            newRow.innerHTML = `
-                <div class="input-group" style="flex: 1;">
-                    <label data-translate-key="size_label">Size</label>
-                    <input type="text" class="size-name" placeholder="e.g., S, M, L" required>
-                </div>
-                <div class="input-group" style="flex: 1;">
-                    <label data-translate-key="quantity_label">Quantity</label>
-                    <input type="number" class="size-quantity" min="1" required>
-                </div>
-                <button type="button" class="remove-size-btn" onclick="removeSizeInput(this)">✕</button>
-            `;
-            container.appendChild(newRow);
-        }
-
-        function removeSizeInput(button) {
-            button.parentElement.remove();
         }
 
         function closeModalAndRedirect() {

@@ -309,6 +309,63 @@
             color: var(--text-secondary);
             font-size: 1rem;
         }
+        
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .edit-btn {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .delete-btn {
+            background-color: #ef4444;
+            color: white;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: var(--bg-primary);
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            width: 80%;
+            max-width: 500px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .close-btn {
+            color: var(--text-secondary);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: var(--text-primary);
+            text-decoration: none;
+            cursor: pointer;
+        }
 
         @media (max-width: 768px) {
             .header {
@@ -391,9 +448,61 @@
             <div class="loading" data-translate-key="loading">Loading...</div>
         </div>
     </div>
+    
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeEditModal">&times;</span>
+            <h2 data-translate-key="edit_purchase_title">Edit Cloth Purchase</h2>
+            <form id="editClothForm">
+                <input type="hidden" id="edit-purchase-id">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="edit-cloth-name" data-translate-key="cloth_name_label">Cloth Name</label>
+                        <input type="text" id="edit-cloth-name" name="cloth_name" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="edit-supplier-name" data-translate-key="supplier_name_label">Supplier Name</label>
+                        <input type="text" id="edit-supplier-name" name="supplier_name" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="edit-total-yards" data-translate-key="total_yards_label">Total Yards</label>
+                        <input type="number" id="edit-total-yards" name="total_yards" step="0.01" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="edit-number-of-rolls" data-translate-key="number_of_rolls_label">Number of Rolls</label>
+                        <input type="number" id="edit-number-of-rolls" name="number_of_rolls" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="edit-number-of-colors" data-translate-key="number_of_colors_label">Number of Colors</label>
+                        <input type="number" id="edit-number-of-colors" name="number_of_colors" required>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn" data-translate-key="save_changes_btn">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="authModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" id="closeAuthModal">&times;</span>
+        <h2 data-translate-key="auth_required">Authorization Required</h2>
+        <p data-translate-key="auth_prompt">Please enter Level 2 credentials to proceed.</p>
+        <div class="input-group">
+          <label for="username" data-translate-key="username">Username</label>
+          <input type="text" id="modal-username" name="username">
+        </div>
+        <div class="input-group">
+          <label for="password" data-translate-key="password">Password</label>
+          <input type="password" id="modal-password" name="password">
+        </div>
+        <button id="modal-submit" class="submit-btn" data-translate-key="authorize">Authorize</button>
+        <p id="modal-error" class="message error"></p>
+      </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            let allPurchases = [];
             const translations = {
                 en: {
                     page_title: "LSP Apparel - Add Cloth",
@@ -418,7 +527,25 @@
                     th_yards: "Total Yards",
                     th_rolls: "Rolls",
                     th_colors: "Colors",
-                    th_date: "Date Added"
+                    th_date: "Date Added",
+                    th_actions: "Actions",
+                    edit: "Edit",
+                    delete: "Delete",
+                    auth_required: "Authorization Required",
+                    auth_prompt: "Please enter Level 2 credentials to proceed.",
+                    username: "Username",
+                    password: "Password",
+                    authorize: "Authorize",
+                    auth_fail: "Authentication failed.",
+                    delete_success: "✓ Purchase deleted successfully.",
+                    edit_purchase_title: "Edit Cloth Purchase",
+                    save_changes_btn: "Save Changes",
+                    update_success: "✓ Purchase updated successfully.",
+                    validation_cloth_name: "Please enter a cloth name",
+                    validation_supplier_name: "Please enter a supplier name",
+                    validation_total_yards: "Please enter a valid total yards (must be greater than 0)",
+                    validation_number_of_rolls: "Please enter a valid number of rolls (must be greater than 0)",
+                    validation_number_of_colors: "Please enter a valid number of colors (must be greater than 0)"
                 },
                 si: {
                     page_title: "LSP ඇඳුම් - රෙදි එක් කරන්න",
@@ -428,7 +555,7 @@
                     supplier_name_label: "සැපයුම්කරුගේ නම",
                     total_yards_label: "මුළු යාර්ඩ් ගණන",
                     number_of_rolls_label: "රෝල් ගණන",
-                    number_of_colors_label: "​පා​ට ගණන",
+                    number_of_colors_label: "​පැ​ත ගණන",
                     hint_enter_continue: "ඉදිරියට යාමට Enter ඔබන්න",
                     hint_enter_submit: "ඉදිරිපත් කිරීමට Enter ඔබන්න",
                     submit_btn: "රෙදි මිලදී ගැනීම එක් කරන්න",
@@ -437,13 +564,31 @@
                     msg_error: "✗ දෝෂයක් ඇතිවිය. කරුණාකර නැවත උත්සාහ කරන්න.",
                     history_title: "📜 මිලදී ගැනීම් ඉතිහාසය",
                     loading: "පූරණය වෙමින්...",
-                    no_data: "මිලදී ගැනීම් වාර්තා හමු නොවීය.",
+                    no_data: "මිලදී ගැනීම් වාර්තා හමු නොවුනී.",
                     th_cloth_name: "රෙදි නම",
                     th_supplier: "සැපයුම්කරු",
                     th_yards: "මුළු යාර්ඩ්",
                     th_rolls: "රෝල්",
-                    th_colors: "පාට",
-                    th_date: "එක් කළ දිනය"
+                    th_colors: "පැත",
+                    th_date: "එක් කළ දිනය",
+                    th_actions: "ක්‍රිය",
+                    edit: "වෙනස් කරන්න",
+                    delete: "මකන්න",
+                    auth_required: "බලය පැවරීම අවශ්‍යයි",
+                    auth_prompt: "ඉදිරියට යාමට කරුණාකර 2 වන මට්ටමේ අක්තපත්‍ර ඇතුළත් කරන්න.",
+                    username: "පරිශීලක නාමය",
+                    password: "මුරපදය",
+                    authorize: "බලය දෙන්න",
+                    auth_fail: "සත්‍යාපනය අසාර්ථක විය.",
+                    delete_success: "✓ මිලදී ගැනීම සාර්ථකව මකා දමන ලදී.",
+                    edit_purchase_title: "රෙදි මිලදී ගැනීම සංස්කරණය කරන්න",
+                    save_changes_btn: "වෙනස්කම් සුරකින්න",
+                    update_success: "✓ මිලදී ගැනීම සාර්ථකව යාවත්කාලීන කරන ලදී.",
+                    validation_cloth_name: "කරුණාකර රෙදි නමක් ඇතුළත් කරන්න",
+                    validation_supplier_name: "කරුණාකර සැපයුම්කරු නමක් ඇතුළත් කරන්න",
+                    validation_total_yards: "කරුණාකර වලංගු මුළු යාර්ඩ් ගණනක් ඇතුළත් කරන්න (0 ට වඩා වැඩි විය යුතුය)",
+                    validation_number_of_rolls: "කරුණාකර වලංගු රෝල් ගණනක් ඇතුළත් කරන්න (0 ට වඩා වැඩි විය යුතුය)",
+                    validation_number_of_colors: "කරුණාකර වලංගු පැත් ගණනක් ඇතුළත් කරන්න (0 ට වඩා වැඩි විය යුතුය)"
                 }
             };
 
@@ -512,6 +657,217 @@
                     }
                 });
             });
+            
+            const authModal = document.getElementById('authModal');
+            const editModal = document.getElementById('editModal');
+            const modalError = document.getElementById('modal-error');
+            
+            document.getElementById('closeAuthModal').onclick = () => {
+                authModal.style.display = "none";
+                document.getElementById('modal-username').value = '';
+                document.getElementById('modal-password').value = '';
+                modalError.textContent = '';
+            };
+            
+            document.getElementById('closeEditModal').onclick = () => editModal.style.display = "none";
+
+            window.onclick = function(event) {
+                if (event.target == authModal) {
+                    authModal.style.display = "none";
+                    document.getElementById('modal-username').value = '';
+                    document.getElementById('modal-password').value = '';
+                    modalError.textContent = '';
+                }
+                if (event.target == editModal) editModal.style.display = "none";
+            }
+            
+            let currentAction = null;
+            let currentItemId = null;
+            let editFormData = null;
+            
+            // Validation function
+            const validateForm = (clothName, supplierName, totalYards, numberOfRolls, numberOfColors) => {
+                if (!clothName || clothName.trim() === '') {
+                    return { valid: false, message: translations[currentLanguage].validation_cloth_name };
+                }
+                if (!supplierName || supplierName.trim() === '') {
+                    return { valid: false, message: translations[currentLanguage].validation_supplier_name };
+                }
+                if (!totalYards || isNaN(totalYards) || parseFloat(totalYards) <= 0) {
+                    return { valid: false, message: translations[currentLanguage].validation_total_yards };
+                }
+                if (!numberOfRolls || isNaN(numberOfRolls) || parseInt(numberOfRolls) <= 0) {
+                    return { valid: false, message: translations[currentLanguage].validation_number_of_rolls };
+                }
+                if (!numberOfColors || isNaN(numberOfColors) || parseInt(numberOfColors) <= 0) {
+                    return { valid: false, message: translations[currentLanguage].validation_number_of_colors };
+                }
+                return { valid: true };
+            };
+            
+            window.handleEdit = (id) => {
+                const item = allPurchases.find(p => p.id === id);
+                if (item) {
+                    document.getElementById('edit-purchase-id').value = item.id;
+                    document.getElementById('edit-cloth-name').value = item.cloth_name;
+                    document.getElementById('edit-supplier-name').value = item.supplier_name;
+                    document.getElementById('edit-total-yards').value = item.total_yards;
+                    document.getElementById('edit-number-of-rolls').value = item.number_of_rolls;
+                    document.getElementById('edit-number-of-colors').value = item.number_of_colors;
+                    editModal.style.display = 'block';
+                }
+            }
+
+            window.handleDelete = (id) => {
+                currentItemId = id;
+                currentAction = 'delete';
+                authModal.style.display = 'block';
+            }
+
+            document.getElementById('editClothForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const clothName = document.getElementById('edit-cloth-name').value;
+                const supplierName = document.getElementById('edit-supplier-name').value;
+                const totalYards = document.getElementById('edit-total-yards').value;
+                const numberOfRolls = document.getElementById('edit-number-of-rolls').value;
+                const numberOfColors = document.getElementById('edit-number-of-colors').value;
+                
+                // Validate form
+                const validation = validateForm(clothName, supplierName, totalYards, numberOfRolls, numberOfColors);
+                if (!validation.valid) {
+                    messageEl.className = 'message error';
+                    messageEl.textContent = '✗ ' + validation.message;
+                    setTimeout(() => {
+                        messageEl.textContent = '';
+                    }, 3000);
+                    return;
+                }
+                
+                currentItemId = document.getElementById('edit-purchase-id').value;
+                currentAction = 'edit';
+                editFormData = {
+                    cloth_name: clothName,
+                    supplier_name: supplierName,
+                    total_yards: parseFloat(totalYards),
+                    number_of_rolls: parseInt(numberOfRolls),
+                    number_of_colors: parseInt(numberOfColors)
+                };
+                editModal.style.display = 'none';
+                authModal.style.display = 'block';
+            });
+            
+            document.getElementById('modal-submit').addEventListener('click', async () => {
+                const username = document.getElementById('modal-username').value;
+                const password = document.getElementById('modal-password').value;
+
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('password', password);
+
+                try {
+                    const response = await fetch('/users/token', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.access_level === 'full_access') {
+                            authModal.style.display = 'none';
+                            document.getElementById('modal-username').value = '';
+                            document.getElementById('modal-password').value = '';
+                            modalError.textContent = '';
+                            
+                            if (currentAction === 'delete') {
+                                await deletePurchase(currentItemId, data.access_token);
+                            } else if (currentAction === 'edit') {
+                                await updatePurchase(currentItemId, data.access_token);
+                            }
+                        } else {
+                            modalError.textContent = translations[currentLanguage].auth_fail;
+                        }
+                    } else {
+                        modalError.textContent = translations[currentLanguage].auth_fail;
+                    }
+                } catch (error) {
+                    modalError.textContent = translations[currentLanguage].msg_error;
+                }
+            });
+
+            const updatePurchase = async (id, authToken) => {
+                const payload = editFormData;
+
+                try {
+                    const response = await fetch('/cloth-purchases/operate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ action: "UPDATE", purchase_id: id, payload: payload })
+                    });
+                    if (response.ok) {
+                        messageEl.className = 'message success';
+                        messageEl.textContent = translations[currentLanguage].update_success;
+                        setTimeout(() => {
+                            messageEl.textContent = '';
+                        }, 3000);
+                        loadPurchaseHistory();
+                        editFormData = null;
+                    } else {
+                        const error = await response.json();
+                        messageEl.className = 'message error';
+                        messageEl.textContent = '✗ ' + (error.detail || translations[currentLanguage].msg_fail);
+                        setTimeout(() => {
+                            messageEl.textContent = '';
+                        }, 3000);
+                    }
+                } catch (error) {
+                    messageEl.className = 'message error';
+                    messageEl.textContent = translations[currentLanguage].msg_error;
+                    setTimeout(() => {
+                        messageEl.textContent = '';
+                    }, 3000);
+                }
+            };
+
+
+            const deletePurchase = async (id, authToken) => {
+                try {
+                    const response = await fetch('/cloth-purchases/operate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ action: "DELETE", purchase_id: id })
+                    });
+
+                    if (response.ok) {
+                        messageEl.className = 'message success';
+                        messageEl.textContent = translations[currentLanguage].delete_success;
+                        setTimeout(() => {
+                            messageEl.textContent = '';
+                        }, 3000);
+                        loadPurchaseHistory();
+                    } else {
+                        const error = await response.json();
+                        messageEl.className = 'message error';
+                        messageEl.textContent = '✗ ' + (error.detail || translations[currentLanguage].msg_fail);
+                        setTimeout(() => {
+                            messageEl.textContent = '';
+                        }, 3000);
+                    }
+                } catch (error) {
+                    messageEl.className = 'message error';
+                    messageEl.textContent = translations[currentLanguage].msg_error;
+                    setTimeout(() => {
+                        messageEl.textContent = '';
+                    }, 3000);
+                }
+            };
+
 
             const loadPurchaseHistory = async () => {
                 const historyContent = document.getElementById('historyContent');
@@ -526,8 +882,8 @@
                     });
 
                     if (response.ok) {
-                        const data = await response.json();
-                        if (data.length === 0) {
+                        allPurchases = await response.json();
+                        if (allPurchases.length === 0) {
                             historyContent.innerHTML = `<div class="no-data" data-translate-key="no_data">${translations[currentLanguage].no_data}</div>`;
                         } else {
                             const tableHTML = `
@@ -541,10 +897,11 @@
                                                 <th data-translate-key="th_rolls">${translations[currentLanguage].th_rolls}</th>
                                                 <th data-translate-key="th_colors">${translations[currentLanguage].th_colors}</th>
                                                 <th data-translate-key="th_date">${translations[currentLanguage].th_date}</th>
+                                                <th data-translate-key="th_actions">${translations[currentLanguage].th_actions}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            ${data.map(item => `
+                                            ${allPurchases.map(item => `
                                                 <tr>
                                                     <td>${item.cloth_name}</td>
                                                     <td>${item.supplier_name}</td>
@@ -552,6 +909,10 @@
                                                     <td>${item.number_of_rolls}</td>
                                                     <td>${item.number_of_colors}</td>
                                                     <td>${new Date(item.created_at).toLocaleString()}</td>
+                                                    <td>
+                                                        <button class="action-btn edit-btn" onclick="handleEdit('${item.id}')">${translations[currentLanguage].edit}</button>
+                                                        <button class="action-btn delete-btn" onclick="handleDelete('${item.id}')">${translations[currentLanguage].delete}</button>
+                                                    </td>
                                                 </tr>
                                             `).join('')}
                                         </tbody>
@@ -571,14 +932,31 @@
             form.addEventListener('submit', async function(event) {
                 event.preventDefault();
 
+                const clothName = document.getElementById('cloth_name').value;
+                const supplierName = document.getElementById('supplier_name').value;
+                const totalYards = document.getElementById('total_yards').value;
+                const numberOfRolls = document.getElementById('number_of_rolls').value;
+                const numberOfColors = document.getElementById('number_of_colors').value;
+                
+                // Validate form
+                const validation = validateForm(clothName, supplierName, totalYards, numberOfRolls, numberOfColors);
+                if (!validation.valid) {
+                    messageEl.className = 'message error';
+                    messageEl.textContent = '✗ ' + validation.message;
+                    setTimeout(() => {
+                        messageEl.textContent = '';
+                    }, 3000);
+                    return;
+                }
+
                 const payload = {
                     action: "CREATE",
                     payload: {
-                        cloth_name: document.getElementById('cloth_name').value,
-                        supplier_name: document.getElementById('supplier_name').value,
-                        total_yards: parseFloat(document.getElementById('total_yards').value),
-                        number_of_rolls: parseInt(document.getElementById('number_of_rolls').value),
-                        number_of_colors: parseInt(document.getElementById('number_of_colors').value)
+                        cloth_name: clothName,
+                        supplier_name: supplierName,
+                        total_yards: parseFloat(totalYards),
+                        number_of_rolls: parseInt(numberOfRolls),
+                        number_of_colors: parseInt(numberOfColors)
                     }
                 };
 
@@ -595,6 +973,9 @@
                     if (response.ok) {
                         messageEl.className = 'message success';
                         messageEl.textContent = translations[currentLanguage].msg_success;
+                        setTimeout(() => {
+                            messageEl.textContent = '';
+                        }, 3000);
                         form.reset();
                         inputs[0].focus();
                         loadPurchaseHistory();
@@ -602,10 +983,16 @@
                         const error = await response.json();
                         messageEl.className = 'message error';
                         messageEl.textContent = '✗ ' + (error.detail || translations[currentLanguage].msg_fail);
+                        setTimeout(() => {
+                            messageEl.textContent = '';
+                        }, 3000);
                     }
                 } catch (error) {
                     messageEl.className = 'message error';
                     messageEl.textContent = translations[currentLanguage].msg_error;
+                    setTimeout(() => {
+                        messageEl.textContent = '';
+                    }, 3000);
                 }
             });
 
