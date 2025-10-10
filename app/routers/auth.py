@@ -25,3 +25,11 @@ async def add_cloth_page(request: Request):
 @router.get("/add-design", response_class=HTMLResponse)
 async def add_design_page(request: Request):
     return templates.TemplateResponse("L1_addDesign.html", {"request": request})
+
+@router.get("/L2_cloth.html", response_class=HTMLResponse)
+async def l2_cloth_page(request: Request):
+    return templates.TemplateResponse("L2_cloth.html", {"request": request})
+
+@router.get("/L2_design.html", response_class=HTMLResponse)
+async def l2_design_page(request: Request):
+    return templates.TemplateResponse("L2_design.html", {"request": request})
