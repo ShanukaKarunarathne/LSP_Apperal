@@ -1,8 +1,0 @@
-fastapi
-uvicorn[standard]
-firebase-admin
-python-dotenv
-python-jose[cryptography]
-passlib[bcrypt]
-fastapi[python-multipart]
-jinja2
