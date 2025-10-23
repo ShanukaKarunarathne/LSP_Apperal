@@ -14,5 +14,9 @@ firebase_admin.initialize_app(cred)
 # Get a reference to the Firestore database
 db = firestore.client()
 
-# Define the collection name
+# Define collection names
 CLOTH_COLLECTION = "cloth_purchases"
+INVENTORY_COLLECTION = "inventory"
+SALES_COLLECTION = "sales"
+PRODUCTION_COLLECTION = "production_tracking"
+DESIGN_COLLECTION = "designs"

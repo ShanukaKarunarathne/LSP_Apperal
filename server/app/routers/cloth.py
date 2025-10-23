@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from typing import List, Any
+from typing import Any
 from datetime import datetime
 from pydantic import ValidationError
 
-from app.models.cloth import ClothOperationRequest, CrudAction, ClothPurchaseCreate, ClothPurchaseUpdate, ClothPurchaseResponse
+from app.models.cloth import ClothOperationRequest, CrudAction, ClothPurchaseCreate, ClothPurchaseUpdate
 from app.services.firebase_service import db, CLOTH_COLLECTION
 from app.auth import get_current_user_with_access
 from app.models.user import AccessLevel

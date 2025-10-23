@@ -4,9 +4,11 @@ from datetime import datetime
 from pydantic import ValidationError
 
 from app.models.design import DesignCreatePayload, DesignUpdate, DesignOperationRequest, Design
-from app.services.firebase_service import db, CLOTH_COLLECTION
+from app.services.firebase_service import db, CLOTH_COLLECTION, INVENTORY_COLLECTION
 from app.auth import get_current_user_with_access
 from app.models.user import AccessLevel
+from google.cloud.firestore_v1.base_query import FieldFilter
+from app.models.production import ProductionStage, ProductionStatus
 
 router = APIRouter(
     prefix="/designs",
@@ -14,6 +16,7 @@ router = APIRouter(
 )
 
 DESIGN_COLLECTION = "designs"
+PRODUCTION_COLLECTION = "production_tracking"
 
 
 @router.post("/operate", response_model=Any, status_code=status.HTTP_200_OK)
@@ -80,9 +83,41 @@ def operate_design(
             # Update cloth purchase with reduced yards
             new_total_yards = cloth_purchase_data['total_yards'] - total_yards_for_design
             cloth_purchase_ref.update({"total_yards": new_total_yards})
-            
+
+            # Automatically start the cutting process
+            tracking_now = datetime.utcnow()
+            tracking_data = {
+                "design_id": doc_ref.id,
+                "stage": ProductionStage.CUTTING.value,
+                "status": ProductionStatus.IN_PROGRESS.value,
+                "stages": {
+                    ProductionStage.CUTTING.value: {
+                        "status": ProductionStatus.IN_PROGRESS.value,
+                        "arrived_at": tracking_now,
+                        "completed_at": None,
+                    },
+                    ProductionStage.SEWING.value: {
+                        "status": ProductionStatus.PENDING.value,
+                        "arrived_at": None,
+                        "completed_at": None,
+                    },
+                    ProductionStage.IRONING.value: {
+                        "status": ProductionStatus.PENDING.value,
+                        "arrived_at": None,
+                        "completed_at": None,
+                    },
+                },
+                "arrived_at": tracking_now,
+                "completed_at": None,
+                "created_at": tracking_now,
+                "updated_at": tracking_now,
+            }
+            tracking_ref = db.collection(PRODUCTION_COLLECTION).document()
+            tracking_ref.set(tracking_data)
+
             created_design = design_data
             created_design['id'] = doc_ref.id
+            created_design['tracking_id'] = tracking_ref.id
             return created_design
 
         except ValidationError as e:
@@ -175,8 +210,18 @@ def operate_design(
             new_total_yards = cloth_purchase_data['total_yards'] + original_allocated_yards
             cloth_purchase_ref.update({"total_yards": new_total_yards})
 
+        # Delete associated production tracking documents
+        production_docs = db.collection(PRODUCTION_COLLECTION).where(filter=FieldFilter('design_id', '==', design_id)).stream()
+        for prod_doc in production_docs:
+            prod_doc.reference.delete()
+
+        # Remove inventory record if present
+        inventory_ref = db.collection(INVENTORY_COLLECTION).document(design_id)
+        if inventory_ref.get().exists:
+            inventory_ref.delete()
+
         doc_ref.delete()
-        return {"status": "success", "message": f"Design {design_id} deleted and yards returned to cloth purchase."}
+        return {"status": "success", "message": f"Design {design_id} and all its production processes have been deleted."}
 
     # --- GET_TOTALS Operation ---
     if action == "GET_TOTALS":
@@ -184,7 +229,7 @@ def operate_design(
             raise HTTPException(status_code=400, detail="design_code is required for GET_TOTALS action.")
         
         design_code = payload['design_code']
-        docs = db.collection(DESIGN_COLLECTION).where('design_code', '==', design_code).stream()
+        docs = db.collection(DESIGN_COLLECTION).where(filter=FieldFilter('design_code', '==', design_code)).stream()
         
         size_totals = {}
         for doc in docs:

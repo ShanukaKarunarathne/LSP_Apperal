@@ -4,9 +4,9 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from typing import Optional
-
 from app.services.firebase_service import db
 from app.models.user import AccessLevel
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 SECRET_KEY = "your-secret-key"  # Change this to a secure, random key
 ALGORITHM = "HS256"
@@ -33,7 +33,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 def authenticate_user(username, password):
-    user_doc = db.collection("users").where('username', '==', username).get()
+    user_doc = db.collection("users").where(filter=FieldFilter('username', '==', username)).get()
     if not user_doc:
         return None
     
@@ -57,7 +57,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credentials_exception
     
-    user_doc = db.collection("users").where('username', '==', username).get()
+    user_doc = db.collection("users").where(filter=FieldFilter('username', '==', username)).get()
     if not user_doc:
         raise credentials_exception
     
