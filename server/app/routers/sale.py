@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import List, Dict, Any, Optional
+
 from fastapi import APIRouter, HTTPException, status, Depends
 from google.cloud.firestore_v1.base_query import FieldFilter
 
@@ -17,19 +19,85 @@ router = APIRouter(
 )
 
 
-def _normalize_sizes(items):
-    size_totals = {}
+def _normalize_sizes(items: Any) -> Dict[str, int]:
+    """Aggregate quantities per size from payload or stored sale items."""
+    size_totals: Dict[str, int] = {}
+    if not items:
+        return size_totals
     for item in items:
         if isinstance(item, dict):
             size = item.get("size")
             quantity = int(item.get("quantity", 0))
         else:
-            size = item.size
-            quantity = item.quantity
+            size = getattr(item, "size", None)
+            quantity = int(getattr(item, "quantity", 0))
         if not size:
             continue
         size_totals[size] = size_totals.get(size, 0) + quantity
     return size_totals
+
+
+def _extract_unit_price(items: Any, *, default: Optional[float] = None) -> float:
+    """
+    Determine the selling price for a design ensuring all entries share the same unit price.
+    Raises HTTPException if conflicting values are provided.
+    """
+    prices: List[float] = []
+    if items:
+        for item in items:
+            if isinstance(item, dict):
+                raw_price = item.get("selling_price")
+            else:
+                raw_price = getattr(item, "selling_price", None)
+            if raw_price is None:
+                continue
+            prices.append(float(raw_price))
+
+    if prices:
+        base_price = prices[0]
+        for price in prices[1:]:
+            if abs(price - base_price) > 1e-6:
+                raise HTTPException(
+                    status_code=400,
+                    detail="All selling prices must match for a design.",
+                )
+        return base_price
+
+    if default is not None:
+        return float(default)
+
+    raise HTTPException(status_code=400, detail="Selling price is required for the sale.")
+
+
+def _build_line_items(payload_items: List[Any], unit_price: float) -> Dict[str, Any]:
+    """Build sale line items using the fixed unit selling price."""
+    items: List[Dict[str, Any]] = []
+    total_quantity = 0
+    total_amount = 0.0
+
+    for item in payload_items:
+        if isinstance(item, dict):
+            quantity = int(item.get("quantity", 0))
+            size = item.get("size")
+        else:
+            quantity = int(getattr(item, "quantity", 0))
+            size = getattr(item, "size", None)
+
+        line_total = unit_price * quantity
+        items.append({
+            "size": size,
+            "quantity": quantity,
+            "selling_price": unit_price,
+            "line_total": line_total,
+        })
+        total_quantity += quantity
+        total_amount += line_total
+
+    return {
+        "items": items,
+        "total_quantity": total_quantity,
+        "total_amount": total_amount,
+    }
 
 
 @router.post("/operate", status_code=status.HTTP_200_OK)
@@ -50,16 +118,19 @@ def operate_sales(
         inventory_data = inventory_doc.to_dict()
         inventory_sizes = {size: int(qty) for size, qty in (inventory_data.get("sizes") or {}).items()}
         size_totals = _normalize_sizes(payload.items)
-        total_sold = 0
+        unit_price = float(payload.selling_price_per_piece)
 
         for size, qty in size_totals.items():
             available = int(inventory_sizes.get(size, 0))
             if available < qty:
                 raise HTTPException(status_code=400, detail=f"Not enough stock for size {size}. Available: {available}")
             inventory_sizes[size] = available - qty
-            total_sold += qty
 
-        remaining_total = int(inventory_data.get("total_available", 0)) - total_sold
+        build_result = _build_line_items(payload.items, unit_price)
+        total_quantity = build_result["total_quantity"]
+        total_amount = build_result["total_amount"]
+
+        remaining_total = int(inventory_data.get("total_available", 0)) - total_quantity
         if remaining_total < 0:
             raise HTTPException(status_code=400, detail="Inventory would become negative.")
 
@@ -74,8 +145,10 @@ def operate_sales(
             "customer_name": payload.customer_name,
             "customer_phone": payload.customer_phone,
             "design_id": design_id,
-            "items": [item.model_dump() for item in payload.items],
-            "total_quantity": total_sold,
+            "items": build_result["items"],
+            "total_quantity": total_quantity,
+            "total_amount": total_amount,
+            "unit_selling_price": unit_price,
             "created_at": now,
             "updated_at": now,
         }
@@ -124,6 +197,16 @@ def operate_sales(
         if payload.design_id != existing_sale.get("design_id"):
             raise HTTPException(status_code=400, detail="Cannot change design for an existing sale.")
 
+        payload_unit_price = float(payload.selling_price_per_piece)
+        unit_price = existing_sale.get("unit_selling_price")
+        if unit_price is None:
+            unit_price = _extract_unit_price(existing_sale.get("items", []), default=payload_unit_price)
+        else:
+            unit_price = float(unit_price)
+
+        if abs(payload_unit_price - unit_price) > 1e-6:
+            raise HTTPException(status_code=400, detail="Cannot change selling price for an existing sale.")
+
         design_id = payload.design_id
         inventory_ref = db.collection(INVENTORY_COLLECTION).document(design_id)
         inventory_doc = inventory_ref.get()
@@ -133,7 +216,8 @@ def operate_sales(
         inventory_data = inventory_doc.to_dict()
         inventory_sizes = {size: int(qty) for size, qty in (inventory_data.get("sizes") or {}).items()}
 
-        old_totals = _normalize_sizes(existing_sale.get("items", []))
+        old_items = existing_sale.get("items", [])
+        old_totals = _normalize_sizes(old_items)
         new_totals = _normalize_sizes(payload.items)
 
         for size, qty in old_totals.items():
@@ -145,8 +229,11 @@ def operate_sales(
                 raise HTTPException(status_code=400, detail=f"Not enough stock for size {size}. Available: {available}")
             inventory_sizes[size] = available - qty
 
+        build_result = _build_line_items(payload.items, unit_price)
+        total_new = build_result["total_quantity"]
+        total_amount = build_result["total_amount"]
         total_old = sum(old_totals.values())
-        total_new = sum(new_totals.values())
+
         remaining_total = int(inventory_data.get("total_available", 0)) + total_old - total_new
         if remaining_total < 0:
             raise HTTPException(status_code=400, detail="Inventory would become negative.")
@@ -162,8 +249,10 @@ def operate_sales(
             "customer_name": payload.customer_name,
             "customer_phone": payload.customer_phone,
             "design_id": design_id,
-            "items": [item.model_dump() for item in payload.items],
+            "items": build_result["items"],
             "total_quantity": total_new,
+            "total_amount": total_amount,
+            "unit_selling_price": unit_price,
             "updated_at": now,
         }
         sale_ref.update(sale_update)

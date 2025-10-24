@@ -23,6 +23,7 @@ class SaleCreatePayload(BaseModel):
     customer_name: str = Field(..., description="Customer full name.")
     customer_phone: str = Field(..., description="Customer contact number.")
     design_id: str = Field(..., description="Design identifier for the sold garment.")
+    selling_price_per_piece: float = Field(..., gt=0, description="Fixed selling price per design piece.")
     items: List[SaleItem] = Field(..., min_items=1, description="List of sizes and quantities sold.")
 
     @validator("customer_phone")
@@ -71,7 +72,8 @@ class SaleRecord(BaseModel):
     customer_name: str
     customer_phone: str
     design_id: str
-    items: List[SaleItem]
+    items: List[Dict[str, Any]]
     total_quantity: int
+    total_amount: float
     created_at: datetime
     updated_at: Optional[datetime] = None
