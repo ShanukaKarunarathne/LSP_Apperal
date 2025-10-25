@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import cloth, design, user, auth, production, inventory, sale
+from app.routers import cloth, design, user, auth, production, inventory, sale, expense, quotation
 
 app = FastAPI(
     title="LSP Apperal API",
@@ -14,6 +14,8 @@ app.include_router(auth.router)
 app.include_router(production.router)
 app.include_router(inventory.router)
 app.include_router(sale.router)
+app.include_router(expense.router)
+app.include_router(quotation.router)
 
 @app.get("/health", tags=["Health Check"])
 def health_check():

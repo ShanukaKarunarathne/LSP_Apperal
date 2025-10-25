@@ -23,6 +23,7 @@ class ClothPurchaseBase(BaseModel):
     total_yards: float
     number_of_rolls: int
     number_of_colors: int
+    buying_price: float
 
 class ClothPurchaseCreate(ClothPurchaseBase):
     pass
@@ -33,6 +34,7 @@ class ClothPurchaseUpdate(BaseModel):
     total_yards: Optional[float] = None
     number_of_rolls: Optional[int] = None
     number_of_colors: Optional[int] = None
+    buying_price: Optional[float] = None
 
 class ClothPurchaseResponse(ClothPurchaseBase):
     id: str

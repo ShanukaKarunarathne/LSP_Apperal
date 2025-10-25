@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import ValidationError
 
 from app.models.cloth import ClothOperationRequest, CrudAction, ClothPurchaseCreate, ClothPurchaseUpdate
-from app.services.firebase_service import db, CLOTH_COLLECTION
+from app.services.firebase_service import db, CLOTH_COLLECTION, EXPENSES_COLLECTION
 from app.auth import get_current_user_with_access
 from app.models.user import AccessLevel
 
@@ -34,10 +34,31 @@ def operate_cloth_purchase(request: ClothOperationRequest, current_user: dict = 
         try:
             purchase_data = ClothPurchaseCreate(**payload).model_dump()
             purchase_data['created_at'] = datetime.utcnow()
-            _, doc_ref = db.collection(CLOTH_COLLECTION).add(purchase_data)
-            created_purchase = purchase_data
-            created_purchase['id'] = doc_ref.id
-            return created_purchase
+            expense_data = {
+                "name": f"Cloth Purchase - {purchase_data['cloth_name']}",
+                "price": purchase_data['buying_price'],
+                "description": (
+                    f"Supplier: {purchase_data['supplier_name']}, "
+                    f"Yards: {purchase_data['total_yards']}"
+                ),
+                "created_at": datetime.utcnow()
+            }
+
+            batch = db.batch()
+            purchase_ref = db.collection(CLOTH_COLLECTION).document()
+            expense_ref = db.collection(EXPENSES_COLLECTION).document()
+
+            batch.set(purchase_ref, purchase_data)
+            batch.set(expense_ref, expense_data)
+            batch.commit()
+
+            created_purchase = {**purchase_data, "id": purchase_ref.id}
+            created_expense = {**expense_data, "id": expense_ref.id}
+
+            return {
+                "purchase": created_purchase,
+                "expense": created_expense
+            }
         except ValidationError as e:
             raise HTTPException(status_code=422, detail=f"Invalid payload for creating purchase: {e}")
 
